@@ -34,93 +34,164 @@
     <div class="glass rounded-2xl p-4 border border-gray-800 mt-6">
         <h3 class="text-sm font-bold mb-2">Сектора:</h3>
         <div class="flex flex-wrap gap-2 text-xs">
-            <span class="bg-gray-800 px-2 py-1 rounded">x0 (20%)</span>
-            <span class="bg-purple-900 px-2 py-1 rounded">x0.5 (25%)</span>
-            <span class="bg-violet-800 px-2 py-1 rounded">x1 (20%)</span>
-            <span class="bg-violet-600 px-2 py-1 rounded">x1.5 (15%)</span>
-            <span class="bg-blue-600 px-2 py-1 rounded">x2 (10%)</span>
-            <span class="bg-emerald-600 px-2 py-1 rounded">x3 (5%)</span>
-            <span class="bg-amber-600 px-2 py-1 rounded">x5 (3%)</span>
-            <span class="bg-red-600 px-2 py-1 rounded">x10 (1.5%)</span>
-            <span class="bg-amber-500 px-2 py-1 rounded">x25 (0.4%)</span>
-            <span class="bg-emerald-500 px-2 py-1 rounded text-black font-bold">x50 (0.1%)</span>
+            <span class="bg-purple-900 px-2 py-1 rounded">x0.5 (22%)</span>
+            <span class="bg-violet-800 px-2 py-1 rounded">x1 (25%)</span>
+            <span class="bg-violet-600 px-2 py-1 rounded">x1.5 (20%)</span>
+            <span class="bg-blue-600 px-2 py-1 rounded">x2 (15%)</span>
+            <span class="bg-emerald-600 px-2 py-1 rounded">x3 (10%)</span>
+            <span class="bg-amber-600 px-2 py-1 rounded">x5 (5%)</span>
+            <span class="bg-red-600 px-2 py-1 rounded">x10 (2%)</span>
+            <span class="bg-amber-500 px-2 py-1 rounded">x25 (0.7%)</span>
+            <span class="bg-emerald-500 px-2 py-1 rounded text-black font-bold">x50 (0.3%)</span>
         </div>
     </div>
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script>
-bal={{user.balance}}, spinning=false;
-const segments=[
-    {label:'x0',color:'#1a1a2e'},{label:'x0.5',color:'#4a1942'},
-    {label:'x1',color:'#6b21a8'},{label:'x1.5',color:'#7c3aed'},
-    {label:'x2',color:'#2563eb'},{label:'x3',color:'#059669'},
-    {label:'x5',color:'#d97706'},{label:'x10',color:'#dc2626'},
-    {label:'x25',color:'#f59e0b'},{label:'x50',color:'#10b981'}
-];
+bal = {{ user.balance }};
+let spinning = false;
+let segments = [];
+let currentRotation = 0;
 
-const canvas=document.getElementById('wheel-canvas');
-const ctx=canvas.getContext('2d');
-let rotation=0;
+const canvas = document.getElementById('wheel-canvas');
+const ctx = canvas.getContext('2d');
 
-function drawWheel(angle=0){
-    const cx=150,cy=150,r=145;
-    const seg=segments.length;
-    const arc=2*Math.PI/seg;
-    ctx.clearRect(0,0,300,300);
-    for(let i=0;i<seg;i++){
-        const a=angle+i*arc;
-        ctx.beginPath();ctx.moveTo(cx,cy);
-        ctx.arc(cx,cy,r,a,a+arc);ctx.closePath();
-        ctx.fillStyle=segments[i].color;ctx.fill();
-        ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=2;ctx.stroke();
-        // Text
-        ctx.save();ctx.translate(cx,cy);ctx.rotate(a+arc/2);
-        ctx.fillStyle='#fff';ctx.font='bold 14px Inter';ctx.textAlign='center';
-        ctx.fillText(segments[i].label,r*0.65,5);ctx.restore();
+function drawWheel(angle = 0, segs = null) {
+    const useSegs = segs || segments;
+    if (!useSegs.length) {
+        // Дефолтное колесо для отображения до первого спина
+        const defaultSegs = [
+            {label:'x0.5', color:'#4a1942'},
+            {label:'x1', color:'#6b21a8'},
+            {label:'x1.5', color:'#7c3aed'},
+            {label:'x2', color:'#2563eb'},
+            {label:'x3', color:'#059669'},
+            {label:'x5', color:'#d97706'},
+            {label:'x10', color:'#dc2626'},
+            {label:'x25', color:'#f59e0b'},
+            {label:'x50', color:'#10b981'}
+        ];
+        drawSegments(angle, defaultSegs);
+        return;
     }
-    // Center
-    ctx.beginPath();ctx.arc(cx,cy,20,0,2*Math.PI);ctx.fillStyle='#0a0a0f';ctx.fill();
-    ctx.strokeStyle='#7c3aed';ctx.lineWidth=3;ctx.stroke();
+    drawSegments(angle, useSegs);
 }
+
+function drawSegments(angle, segs) {
+    const cx = 150, cy = 150, r = 145;
+    const n = segs.length;
+    const arc = 2 * Math.PI / n;
+    ctx.clearRect(0, 0, 300, 300);
+
+    // Начинаем рисовать сверху (указатель ▼ сверху)
+    // Сектор 0 центрируется вверху при angle=0
+    const startAngle = -Math.PI/2 - arc/2 + angle;
+
+    for (let i = 0; i < n; i++) {
+        const a = startAngle + i * arc;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, r, a, a + arc);
+        ctx.closePath();
+        ctx.fillStyle = segs[i].color;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Текст
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(a + arc/2);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 13px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillText(segs[i].label, r * 0.68, 5);
+        ctx.restore();
+    }
+
+    // Центр
+    ctx.beginPath();
+    ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
+    ctx.fillStyle = '#0a0a0f';
+    ctx.fill();
+    ctx.strokeStyle = '#7c3aed';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+}
+
+// Рисуем колесо при загрузке
 drawWheel();
 
-async function spinWheel(){
-    if(spinning) return;
-    const bet=parseFloat(document.getElementById('bet-amount').value);
-    if(!bet||bet<=0) return showToast('Введите ставку','error');
-    if(bet>bal) return showToast('Недостаточно средств','error');
-    spinning=true;
-    document.getElementById('wheel-btn').textContent='⏳ Крутим...';
+async function spinWheel() {
+    if (spinning) return;
+    const bet = parseFloat(document.getElementById('bet-amount').value);
+    if (!bet || bet <= 0) return showToast('Введите ставку', 'error');
+    if (bet > bal) return showToast('Недостаточно средств', 'error');
 
-    const r=await fetch('/api/game/wheel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bet})});
-    const d=await r.json();
+    spinning = true;
+    document.getElementById('wheel-btn').textContent = '⏳ Крутим...';
 
-    if(d.success){
-        const targetAngle=d.target_angle*Math.PI/180;
-        const startAngle=rotation;
-        const totalAngle=targetAngle;
-        const duration=4000;
-        const start=Date.now();
+    const r = await fetch('/api/game/wheel', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({bet})
+    });
+    const d = await r.json();
 
-        function animate(){
-            const elapsed=Date.now()-start;
-            const progress=Math.min(elapsed/duration,1);
-            const eased=1-Math.pow(1-progress,3); // ease out cubic
-            rotation=startAngle+totalAngle*eased;
-            drawWheel(rotation);
-            if(progress<1) requestAnimationFrame(animate);
-            else{
-                bal=d.balance; updateBalance(bal);
-                const ra=document.getElementById('result-area');
-                if(d.is_win) ra.innerHTML=`<div class="win-animation"><p class="text-2xl font-black text-emerald-400">🎉 ${d.label}! +${Math.floor(d.profit)}₽</p></div>`;
-                else ra.innerHTML=`<p class="text-xl font-bold text-red-400">😢 ${d.label}! -${Math.floor(bet)}₽</p>`;
-                spinning=false;
-                document.getElementById('wheel-btn').textContent='🎯 КРУТИТЬ';
-            }
-        }
-        animate();
+    if (!d.success) {
+        showToast(d.message || 'Ошибка', 'error');
+        spinning = false;
+        document.getElementById('wheel-btn').textContent = '🎯 КРУТИТЬ';
+        return;
     }
+
+    segments = d.segments;
+    const n = segments.length;
+    const arc = 2 * Math.PI / n;
+    const idx = d.segment_index;
+
+    // Целевой угол: чтобы центр сектора idx оказался под указателем (сверху)
+    // При rotation=0 сектор 0 сверху => сектор idx нужно "открутить" на -idx*arc
+    // Добавляем 6 полных оборотов для эффекта
+    const targetRotation = currentRotation
+        + 6 * 2 * Math.PI
+        + ((-idx * arc) - (currentRotation % (2 * Math.PI)));
+
+    const startRot = currentRotation;
+    const totalDelta = targetRotation - startRot;
+    const duration = 4500;
+    const startTime = Date.now();
+
+    function animate() {
+        const elapsed = Date.now() - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 4); // ease out quart
+        currentRotation = startRot + totalDelta * eased;
+        drawWheel(currentRotation);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        } else {
+            bal = d.balance;
+            updateBalance(bal);
+            const ra = document.getElementById('result-area');
+
+            if (d.is_win) {
+                ra.innerHTML = `<div class="win-animation"><p class="text-2xl font-black text-emerald-400">🎉 ${d.label}! +${Math.floor(d.profit)}₽</p></div>`;
+            } else if (d.multiplier > 0) {
+                ra.innerHTML = `<p class="text-xl font-bold text-amber-400">⚠️ ${d.label} (вернулось ${Math.floor(d.payout)}₽)</p>`;
+            } else {
+                ra.innerHTML = `<p class="text-xl font-bold text-red-400">😢 ${d.label}! -${Math.floor(bet)}₽</p>`;
+            }
+
+            spinning = false;
+            document.getElementById('wheel-btn').textContent = '🎯 КРУТИТЬ';
+        }
+    }
+    animate();
 }
 </script>
 {% endblock %}

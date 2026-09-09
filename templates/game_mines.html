@@ -41,7 +41,7 @@
                     <label class="text-sm text-gray-400 block mb-1">Кол-во мин</label>
                     <select id="mine-count" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-violet-500">
                         {% for m in [1,3,5,7,10,15,20,24] %}
-                        <option value="{{m}}" {% if m= =3 %}selected{% endif %}>{{m}}</option>
+                        <option value="{{m}}" {% if m == 3 %}selected{% endif %}>{{m}}</option>
                         {% endfor %}
                     </select>
                 </div>

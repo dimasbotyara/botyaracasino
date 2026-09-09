@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, session, jsonify, flash
+    url_for, session, jsonify, flash, Response
 )
 from models import (
     init_db, create_user, authenticate_user, get_user_by_id,
@@ -20,7 +20,6 @@ from models import (
 from admin import admin_bp
 
 app = Flask(__name__)
-# Постоянный ключ — сессии не сбрасываются при перезапуске
 SECRET_KEY_FILE = os.path.join(os.path.dirname(__file__), '.secret_key')
 
 def get_or_create_secret_key():
@@ -33,8 +32,8 @@ def get_or_create_secret_key():
     return key
 
 app.secret_key = get_or_create_secret_key()
-app.config['SESSION_COOKIE_NAME'] = 'neon_casino'
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7  # 7 дней
+app.config['SESSION_COOKIE_NAME'] = 'botyaracasino'
+app.config['PERMANENT_SESSION_LIFETIME'] = 86400 * 7
 app.register_blueprint(admin_bp)
 init_db()
 
@@ -42,21 +41,54 @@ DEVELOPER = "dimasbotyara"
 
 
 # ═══════════════════════════════════════
+#          SVG AVATAR / FAVICON
+# ═══════════════════════════════════════
+
+SITE_AVATAR_SVG = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#3b0764"/>
+      <stop offset="100%" stop-color="#0a0a0f"/>
+    </radialGradient>
+    <linearGradient id="frame" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <rect x="4" y="4" width="120" height="120" rx="26" fill="none" stroke="url(#frame)" stroke-width="2" opacity="0.7"/>
+  <text x="64" y="86" font-size="72" text-anchor="middle" filter="url(#glow)">🎰</text>
+  <text x="64" y="112" font-size="10" font-family="Inter,sans-serif" font-weight="900"
+        fill="#c4b5fd" text-anchor="middle" letter-spacing="2">BOTYARA</text>
+</svg>'''
+
+
+@app.route('/favicon.svg')
+def favicon_svg():
+    return Response(SITE_AVATAR_SVG, mimetype='image/svg+xml')
+
+@app.route('/favicon.ico')
+def favicon_ico():
+    return Response(SITE_AVATAR_SVG, mimetype='image/svg+xml')
+
+@app.route('/avatar.svg')
+def avatar_svg():
+    return Response(SITE_AVATAR_SVG, mimetype='image/svg+xml')
+
+
+# ═══════════════════════════════════════
 #          CONSOLE LOGGING SYSTEM
 # ═══════════════════════════════════════
 
 class CasinoConsole:
-    RESET = '\033[0m'
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    CYAN = '\033[96m'
-    WHITE = '\033[97m'
-    GRAY = '\033[90m'
+    RESET = '\033[0m'; BOLD = '\033[1m'; DIM = '\033[2m'
+    RED = '\033[91m'; GREEN = '\033[92m'; YELLOW = '\033[93m'
+    BLUE = '\033[94m'; MAGENTA = '\033[95m'; CYAN = '\033[96m'
+    WHITE = '\033[97m'; GRAY = '\033[90m'
 
     def __init__(self):
         self.online_users = {}
@@ -75,16 +107,11 @@ class CasinoConsole:
                 kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
             except: pass
 
-    def _time(self):
-        return datetime.now().strftime('%H:%M:%S')
-
+    def _time(self): return datetime.now().strftime('%H:%M:%S')
     def _print(self, msg):
-        with self.lock:
-            print(msg, flush=True)
-
+        with self.lock: print(msg, flush=True)
     def _format_money(self, amount):
         return f"{self.GREEN}+{amount:,.0f}₽{self.RESET}" if amount >= 0 else f"{self.RED}{amount:,.0f}₽{self.RESET}"
-
     def _format_balance(self, balance):
         return f"{self.CYAN}{balance:,.0f}₽{self.RESET}"
 
@@ -114,7 +141,7 @@ class CasinoConsole:
         print(f"""
 {self.MAGENTA}{self.BOLD}
 🎰 ══════════════════════════════════════════════════════
-   {self.WHITE}N E O N   C A S I N O{self.MAGENTA}
+   {self.WHITE}b o t y a r a c a s i n o{self.MAGENTA}
    {self.GRAY}by {self.CYAN}{self.BOLD}{DEVELOPER}{self.RESET}
 {self.MAGENTA}══════════════════════════════════════════════════════ 🎰
 {self.RESET}
@@ -157,7 +184,7 @@ class CasinoConsole:
         self.total_games_played += 1
         self.total_money_wagered += bet
         if is_win: self.total_money_won += payout
-        icons = {'Слоты':'🎰','Кости':'🎲','Рулетка':'🎡','Монетка':'🪙','Краш':'📈','Блэкджек':'🃏','Мины':'💣','Хай-Лоу':'🎱','Скачки':'🏇','Колесо':'🎯'}
+        icons = {'Слоты':'🎰','Кости':'🎲','Рулетка':'🎡','Монетка':'🪙','Краш':'📈','Блэкджек':'🃏','Мины':'💣','Хай-Лоу':'🎱','Скачки':'🏇','Колесо':'🎯','Башня':'🗼','Лимбо':'🎯','Пенальти':'⚽','Кено':'🎱'}
         icon = icons.get(game_type, '🎮')
         r = f"{self.GREEN}{self.BOLD}WIN{self.RESET} {self._format_money(profit)}" if is_win else f"{self.RED}LOSS{self.RESET} {self._format_money(profit)}"
         self._print(f"  {self.GRAY}[{self._time()}]{self.RESET} {self.MAGENTA}{icon} GAME      {self.RESET} {self.BOLD}{self.WHITE}{username}{self.RESET} → {self.YELLOW}{game_type}{self.RESET} | Ставка: {self.WHITE}{bet:,.0f}₽{self.RESET} | {r} | Баланс: {self._format_balance(balance)}")
@@ -165,23 +192,17 @@ class CasinoConsole:
             self._print(f"  {self.GRAY}{'':>11}{self.RESET} {self.YELLOW}⭐ КРУПНЫЙ ВЫИГРЫШ!{self.RESET} {self.WHITE}{username}{self.RESET} {self.GREEN}{self.BOLD}+{profit:,.0f}₽{self.RESET}")
 
     def log_game_enter(self, username, game):
-        names = {'slots':'🎰 Слоты','dice':'🎲 Кости','roulette':'🎡 Рулетка','coinflip':'🪙 Монетка','crash':'📈 Краш','blackjack':'🃏 Блэкджек','mines':'💣 Мины','hilo':'🎱 Хай-Лоу','races':'🏇 Скачки','wheel':'🎯 Колесо'}
+        names = {'slots':'🎰 Слоты','dice':'🎲 Кости','roulette':'🎡 Рулетка','coinflip':'🪙 Монетка','crash':'📈 Краш','blackjack':'🃏 Блэкджек','mines':'💣 Мины','hilo':'🎱 Хай-Лоу','races':'🏇 Скачки','wheel':'🎯 Колесо','tower':'🗼 Башня','limbo':'🎯 Лимбо','penalty':'⚽ Пенальти','keno':'🎱 Кено'}
         self._print(f"  {self.GRAY}[{self._time()}]{self.RESET} {self.BLUE}🚪 ENTER     {self.RESET} {self.BOLD}{self.WHITE}{username}{self.RESET} → {self.YELLOW}{names.get(game, game)}{self.RESET}")
 
     def log_page(self, username, page):
         pages = {'dashboard':'🏠 Главная','profile':'👤 Профиль','leaderboard':'🏆 Лидерборд'}
         self._print(f"  {self.GRAY}[{self._time()}]{self.RESET} {self.GRAY}📄 PAGE      {self.RESET} {self.WHITE}{username}{self.RESET} → {pages.get(page, page)}")
 
-    def log_admin(self, username, action, target='', details=''):
-        self._print(f"  {self.GRAY}[{self._time()}]{self.RESET} {self.YELLOW}🛡️ ADMIN     {self.RESET} {self.BOLD}{self.WHITE}{username}{self.RESET} → {self.YELLOW}{action}{self.RESET} {self.WHITE}{target}{self.RESET} {self.GRAY}{details}{self.RESET}")
-
     def log_request(self, method, path, status, ip, ms):
-        if '/api/balance' in path or '/api/leaderboard' in path: return
+        if '/api/balance' in path or '/api/leaderboard' in path or '/api/chat/messages' in path: return
         c = self.GREEN if status < 400 else self.YELLOW if status < 500 else self.RED
         self._print(f"  {self.GRAY}[{self._time()}]{self.RESET} {self.GRAY}📡 HTTP      {self.RESET} {c}{method} {status}{self.RESET} {self.GRAY}{path} ({ms:.0f}ms) {ip}{self.RESET}")
-
-    def log_error(self, msg):
-        self._print(f"  {self.GRAY}[{self._time()}]{self.RESET} {self.RED}❌ ERROR     {self.RESET} {self.RED}{msg}{self.RESET}")
 
     def _print_online(self):
         n = len(self.online_users)
@@ -202,16 +223,13 @@ console = CasinoConsole()
 @app.before_request
 def before_request():
     request._start_time = time.time()
-
-    # Maintenance mode check
     if get_setting('maintenance_mode'):
         username = session.get('username', '')
         ip = request.remote_addr
         level = get_admin_level(username, ip) if username else 'user'
-        if level == 'user' and request.endpoint not in ('login', 'static', None):
+        if level == 'user' and request.endpoint not in ('login', 'static', 'favicon_svg', 'favicon_ico', 'avatar_svg', None):
             flash('🔧 Сервер на обслуживании. Попробуйте позже.', 'error')
             return redirect(url_for('login'))
-
     if not session.get('_logged_connect') and request.endpoint and 'api' not in str(request.endpoint):
         console.log_connect(request.remote_addr, request.headers.get('User-Agent', ''))
         session['_logged_connect'] = True
@@ -263,7 +281,18 @@ def register():
             return render_template('register.html', dev=DEVELOPER)
         ok, msg = create_user(username, password)
         if ok:
-            flash(msg, 'success'); console.log_register(username, ip)
+            console.log_register(username, ip)
+            # AUTO-LOGIN после регистрации
+            user, auth_msg = authenticate_user(username, password)
+            if user:
+                session.permanent = True
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                set_user_online(user['id'], True)
+                console.log_login(user['username'], user['id'], ip, user['balance'])
+                flash('🎉 Добро пожаловать в botyaracasino!', 'success')
+                return redirect(url_for('dashboard'))
+            flash(msg, 'success')
             return redirect(url_for('login'))
         flash(msg, 'error')
     return render_template('register.html', dev=DEVELOPER)
@@ -303,7 +332,6 @@ def logout():
 def dashboard():
     user = current_user()
     broadcast = get_active_broadcast()
-    # Проверяем admin level для кнопки админки
     admin_level = get_admin_level(session.get('username', ''), request.remote_addr)
     console.log_page(get_username(), 'dashboard')
     return render_template('dashboard.html', user=user, dev=DEVELOPER,
@@ -386,11 +414,10 @@ def log_game_result(username, game_type, bet, is_win, profit, payout, balance, d
 
 
 # ═══════════════════════════════════════
-#          ALL GAME ROUTES
+#          GAMES (ЩЕДРЫЕ ШАНСЫ)
 # ═══════════════════════════════════════
-# (Те же что были, но с check_game_disabled)
 
-# 1. SLOTS
+# 1. SLOTS — больше шансов на комбо + повышенные множители
 @app.route('/game/slots')
 @login_required
 def game_slots():
@@ -404,18 +431,24 @@ def api_game_slots():
     if err: return err
     user = current_user(); bet, err = validate_bet(user, request.get_json())
     if err: return err
-    symbols = ['🍒','🍋','🍊','🍇','💎','7️⃣','🍀']; weights = [25,22,20,15,10,5,3]
+    symbols = ['🍒','🍋','🍊','🍇','💎','7️⃣','🍀']
+    # ЩЕДРЕЕ: больше веса у дорогих символов
+    weights  = [22, 20, 18, 16, 13, 8, 5]
     reels = [random.choices(symbols, weights=weights, k=3) for _ in range(3)]
     mid = [reels[0][1], reels[1][1], reels[2][1]]
-    mult = 0; mults = {'🍒':3,'🍋':4,'🍊':5,'🍇':7,'💎':15,'7️⃣':25,'🍀':50}
-    if mid[0]==mid[1]==mid[2]: mult = mults.get(mid[0], 3)
-    elif mid[0]==mid[1] or mid[1]==mid[2]: mult = 1.5
-    payout = bet*mult; is_win = mult > 0; details = f"{'|'.join(mid)} →x{mult}"
+    mult = 0
+    mults = {'🍒':5,'🍋':7,'🍊':10,'🍇':15,'💎':30,'7️⃣':50,'🍀':100}
+    if mid[0]==mid[1]==mid[2]:
+        mult = mults.get(mid[0], 5)
+    elif mid[0]==mid[1] or mid[1]==mid[2] or mid[0]==mid[2]:
+        mult = 2.5
+    payout = bet*mult; is_win = mult > 0
+    details = f"{'|'.join(mid)} →x{mult}"
     new_bal, profit, _ = record_game(session['user_id'], 'Слоты', bet, is_win, payout, details)
     log_game_result(get_username(), 'Слоты', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'reels':reels,'middle_row':mid,'multiplier':mult,'payout':payout,'profit':profit,'is_win':is_win,'balance':new_bal})
 
-# 2. DICE
+# 2. DICE — расширил диапазоны high/low
 @app.route('/game/dice')
 @login_required
 def game_dice():
@@ -432,17 +465,18 @@ def api_game_dice():
     guess = data.get('guess','high'); target = int(data.get('target',7))
     d1, d2 = random.randint(1,6), random.randint(1,6); total = d1+d2
     is_win, mult = False, 0
-    if guess=='high' and total>=8: is_win, mult = True, 2.0
-    elif guess=='low' and total<=6: is_win, mult = True, 2.0
-    elif guess=='seven' and total==7: is_win, mult = True, 4.0
-    elif guess=='exact' and total==target: is_win, mult = True, 6.0
-    elif guess=='doubles' and d1==d2: is_win, mult = True, 5.0
+    # ЩЕДРЕЕ: high = 7+, low = 7-, seven = ровно 7 -> оба выигрывают на 7
+    if guess=='high' and total>=7: is_win, mult = True, 2.1
+    elif guess=='low' and total<=7: is_win, mult = True, 2.1
+    elif guess=='seven' and total==7: is_win, mult = True, 5.0
+    elif guess=='exact' and total==target: is_win, mult = True, 8.0
+    elif guess=='doubles' and d1==d2: is_win, mult = True, 6.0
     payout = bet*mult; details = f"🎲{d1}+{d2}={total} [{guess}] →x{mult}"
     new_bal, profit, _ = record_game(session['user_id'], 'Кости', bet, is_win, payout, details)
     log_game_result(get_username(), 'Кости', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'die1':d1,'die2':d2,'total':total,'guess':guess,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
-# 3. ROULETTE
+# 3. ROULETTE — повышенные множители
 @app.route('/game/roulette')
 @login_required
 def game_roulette():
@@ -461,12 +495,12 @@ def api_game_roulette():
     reds = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36}
     color = 'green' if result_num==0 else ('red' if result_num in reds else 'black')
     is_win, mult = False, 0
-    if bet_type=='red' and color=='red': is_win, mult = True, 2.0
-    elif bet_type=='black' and color=='black': is_win, mult = True, 2.0
-    elif bet_type=='green' and color=='green': is_win, mult = True, 36.0
-    elif bet_type=='even' and result_num!=0 and result_num%2==0: is_win, mult = True, 2.0
-    elif bet_type=='odd' and result_num%2==1: is_win, mult = True, 2.0
-    elif bet_type=='number' and result_num==bet_number: is_win, mult = True, 36.0
+    if bet_type=='red' and color=='red': is_win, mult = True, 2.1
+    elif bet_type=='black' and color=='black': is_win, mult = True, 2.1
+    elif bet_type=='green' and color=='green': is_win, mult = True, 40.0
+    elif bet_type=='even' and result_num!=0 and result_num%2==0: is_win, mult = True, 2.1
+    elif bet_type=='odd' and result_num%2==1: is_win, mult = True, 2.1
+    elif bet_type=='number' and result_num==bet_number: is_win, mult = True, 40.0
     payout = bet*mult; details = f"{result_num}({color}) [{bet_type}] →x{mult}"
     new_bal, profit, _ = record_game(session['user_id'], 'Рулетка', bet, is_win, payout, details)
     log_game_result(get_username(), 'Рулетка', bet, is_win, profit, payout, new_bal)
@@ -487,13 +521,15 @@ def api_game_coinflip():
     user = current_user(); data = request.get_json(); bet, err = validate_bet(user, data)
     if err: return err
     choice = data.get('choice','heads'); result = random.choice(['heads','tails'])
-    is_win = choice==result; mult = 1.95 if is_win else 0; payout = bet*mult
+    is_win = choice==result
+    mult = 2.0 if is_win else 0  # x2 (0% edge!)
+    payout = bet*mult
     ru = {'heads':'Орёл','tails':'Решка'}; details = f"{ru[choice]}→{ru[result]} x{mult}"
     new_bal, profit, _ = record_game(session['user_id'], 'Монетка', bet, is_win, payout, details)
     log_game_result(get_username(), 'Монетка', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'choice':choice,'result':result,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
-# 5. CRASH
+# 5. CRASH — минимальный edge
 @app.route('/game/crash')
 @login_required
 def game_crash():
@@ -509,7 +545,8 @@ def api_game_crash():
     if err: return err
     cashout = max(float(data.get('cashout',2.0)),1.1)
     r = random.random()
-    crash_point = 1.0 if r < 0.03 else round(min(1/(1-r*0.97),100.0),2)
+    # ЩЕДРЕЕ: instant-crash всего 1.5% (было 3%)
+    crash_point = 1.0 if r < 0.015 else round(min(1/(1-r*0.99),200.0),2)
     is_win = cashout <= crash_point; mult = cashout if is_win else 0; payout = bet*mult
     details = f"Краш:{crash_point}x Кэшаут:{cashout}x"
     new_bal, profit, _ = record_game(session['user_id'], 'Краш', bet, is_win, payout, details)
@@ -555,7 +592,8 @@ def api_bj_deal():
         session['bj_done']=True; new_bal, profit, _ = record_game(session['user_id'], 'Блэкджек', bet, False, bet, 'Push')
         return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':dv,'status':'push','message':'Ничья!','payout':bet,'profit':0,'balance':new_bal,'done':True})
     elif pv==21:
-        session['bj_done']=True; payout=bet*2.5; new_bal, profit, _ = record_game(session['user_id'], 'Блэкджек', bet, True, payout, 'BJ x2.5')
+        session['bj_done']=True; payout=bet*3.0  # ЩЕДРЕЕ: BJ = x3 (было x2.5)
+        new_bal, profit, _ = record_game(session['user_id'], 'Блэкджек', bet, True, payout, 'BJ x3')
         log_game_result(get_username(), 'Блэкджек', bet, True, profit, payout, new_bal)
         return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':dv,'status':'blackjack','message':'🎉 БЛЭКДЖЕК!','payout':payout,'profit':profit,'balance':new_bal,'done':True})
     return jsonify({'player':player,'dealer':[dealer[0],{'rank':'?','suit':'?'}],'player_value':pv,'dealer_value':bj_card_value(dealer[0]),'status':'playing','done':False})
@@ -584,19 +622,29 @@ def api_bj_stand():
     pv = bj_hand_value(player)
     while bj_hand_value(dealer)<17: dealer.append(deck.pop())
     dv = bj_hand_value(dealer)
-    if dv>21: payout=bet*2; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,True,payout,f'Дилер bust {dv}'); status,msg='win',f'🎉 Дилер перебрал!'
-    elif pv>dv: payout=bet*2; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,True,payout,f'{pv}vs{dv}'); status,msg='win',f'🎉 {pv} vs {dv}'
+    if dv>21: payout=bet*2.2; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,True,payout,f'Дилер bust {dv}'); status,msg='win',f'🎉 Дилер перебрал!'
+    elif pv>dv: payout=bet*2.2; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,True,payout,f'{pv}vs{dv}'); status,msg='win',f'🎉 {pv} vs {dv}'
     elif pv==dv: payout=bet; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,False,bet,f'Push {pv}'); status,msg='push',f'Ничья {pv}'
     else: payout=0; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,False,0,f'{pv}vs{dv}'); status,msg='loss',f'😢 {pv} vs {dv}'
     log_game_result(get_username(),'Блэкджек',bet,status=='win',profit,payout,new_bal)
     return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':dv,'status':status,'message':msg,'payout':payout,'profit':profit,'balance':new_bal,'done':True})
 
-# 7. MINES
+# 7. MINES — фикс + честная формула + минимальный edge
 @app.route('/game/mines')
 @login_required
 def game_mines():
     console.log_game_enter(get_username(), 'mines')
     return render_template('game_mines.html', user=current_user(), dev=DEVELOPER)
+
+def mines_multiplier(safe_total, opened):
+    """Честный множитель для мин с минимальным edge (~1%)"""
+    mult = 1.0
+    for i in range(opened):
+        remaining_safe = safe_total - i
+        remaining_total = 25 - i
+        if remaining_safe <= 0: return mult
+        mult *= remaining_total / remaining_safe
+    return max(round(mult * 0.99, 2), 1.0)
 
 @app.route('/api/game/mines/start', methods=['POST'])
 @login_required
@@ -605,39 +653,77 @@ def api_mines_start():
     if err: return err
     user = current_user(); data = request.get_json(); bet, e = validate_bet(user, data)
     if e: return e
-    mc = max(1,min(24,int(data.get('mines',3))))
-    session['mines_field']=list(random.sample(range(25),mc)); session['mines_bet']=bet; session['mines_count']=mc; session['mines_opened']=[]; session['mines_active']=True
-    return jsonify({'success':True,'mines':mc,'bet':bet})
+    mc = max(1, min(24, int(data.get('mines', 3))))
+    session['mines_field'] = list(random.sample(range(25), mc))
+    session['mines_bet'] = bet
+    session['mines_count'] = mc
+    session['mines_opened'] = []
+    session['mines_active'] = True
+    return jsonify({'success': True, 'mines': mc, 'bet': bet})
 
 @app.route('/api/game/mines/open', methods=['POST'])
 @login_required
 def api_mines_open():
-    if not session.get('mines_active'): return jsonify({'success':False,'message':'Начните новую'})
-    cell=int(request.get_json().get('cell',-1)); mines=set(session['mines_field']); opened=session['mines_opened']; bet=session['mines_bet']; mc=session['mines_count']
-    if cell in opened: return jsonify({'success':False,'message':'Уже открыта'})
+    if not session.get('mines_active'):
+        return jsonify({'success': False, 'message': 'Начните новую игру'})
+    cell = int(request.get_json().get('cell', -1))
+    mines = set(session['mines_field'])
+    opened = session['mines_opened']
+    bet = session['mines_bet']
+    mc = session['mines_count']
+    safe = 25 - mc
+
+    if cell < 0 or cell > 24:
+        return jsonify({'success': False, 'message': 'Неверная клетка'})
+    if cell in opened:
+        return jsonify({'success': False, 'message': 'Уже открыта'})
+
     if cell in mines:
-        session['mines_active']=False; new_bal,profit,_=record_game(session['user_id'],'Мины',bet,False,0,f'Boom {len(opened)} cells')
-        log_game_result(get_username(),'Мины',bet,False,profit,0,new_bal)
-        return jsonify({'success':True,'mine':True,'cell':cell,'mines':list(mines),'balance':new_bal,'profit':profit,'multiplier':0})
-    opened.append(cell); session['mines_opened']=opened; safe=25-mc
-    mult=1.0
-    for i in range(len(opened)): mult*=safe/(safe-i) if (safe-i)>0 else 1
-    mult=max(round(mult*0.97,2),1.0)
-    return jsonify({'success':True,'mine':False,'cell':cell,'opened':opened,'multiplier':mult,'current_payout':round(bet*mult,2),'remaining_safe':safe-len(opened)})
+        session['mines_active'] = False
+        new_bal, profit, _ = record_game(
+            session['user_id'], 'Мины', bet, False, 0,
+            f'Boom {len(opened)} cells'
+        )
+        log_game_result(get_username(), 'Мины', bet, False, profit, 0, new_bal)
+        return jsonify({
+            'success': True, 'mine': True, 'cell': cell,
+            'mines': list(mines), 'balance': new_bal,
+            'profit': profit, 'multiplier': 0
+        })
+
+    opened.append(cell)
+    session['mines_opened'] = opened
+    mult = mines_multiplier(safe, len(opened))
+    return jsonify({
+        'success': True, 'mine': False, 'cell': cell,
+        'opened': opened, 'multiplier': mult,
+        'current_payout': round(bet * mult, 2),
+        'remaining_safe': safe - len(opened)
+    })
 
 @app.route('/api/game/mines/cashout', methods=['POST'])
 @login_required
 def api_mines_cashout():
-    if not session.get('mines_active'): return jsonify({'success':False,'message':'Нет игры'})
-    opened=session['mines_opened']
-    if not opened: return jsonify({'success':False,'message':'Откройте клетку'})
-    bet=session['mines_bet']; mc=session['mines_count']; safe=25-mc
-    mult=1.0
-    for i in range(len(opened)): mult*=safe/(safe-i) if (safe-i)>0 else 1
-    mult=max(round(mult*0.97,2),1.0); payout=round(bet*mult,2)
-    session['mines_active']=False; new_bal,profit,_=record_game(session['user_id'],'Мины',bet,True,payout,f'x{mult}')
-    log_game_result(get_username(),'Мины',bet,True,profit,payout,new_bal)
-    return jsonify({'success':True,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal,'mines':session['mines_field']})
+    if not session.get('mines_active'):
+        return jsonify({'success': False, 'message': 'Нет игры'})
+    opened = session['mines_opened']
+    if not opened:
+        return jsonify({'success': False, 'message': 'Откройте клетку'})
+    bet = session['mines_bet']
+    mc = session['mines_count']
+    safe = 25 - mc
+    mult = mines_multiplier(safe, len(opened))
+    payout = round(bet * mult, 2)
+    session['mines_active'] = False
+    new_bal, profit, _ = record_game(
+        session['user_id'], 'Мины', bet, True, payout, f'x{mult}'
+    )
+    log_game_result(get_username(), 'Мины', bet, True, profit, payout, new_bal)
+    return jsonify({
+        'success': True, 'multiplier': mult, 'payout': payout,
+        'profit': profit, 'balance': new_bal,
+        'mines': session['mines_field']
+    })
 
 # 8. HI-LO
 @app.route('/game/hilo')
@@ -666,11 +752,16 @@ def api_hilo_guess():
     guess=request.get_json().get('guess','high'); cur=session['hilo_card']; bet=session['hilo_bet']
     nc={'rank':random.choice(HILO_RANKS),'suit':random.choice(['♠','♥','♦','♣'])}
     cv,nv=HILO_RANKS.index(cur['rank']),HILO_RANKS.index(nc['rank'])
-    ok=(guess=='high' and nv>cv) or (guess=='low' and nv<cv) or (guess=='same' and nv==cv)
+    # ЩЕДРЕЕ: high/low принимают равные тоже как выигрыш
+    ok = (guess=='high' and nv>=cv) or (guess=='low' and nv<=cv) or (guess=='same' and nv==cv)
     if ok:
-        session['hilo_streak']+=1; session['hilo_mult']=round(session['hilo_mult']*(12.0 if guess=='same' else 1.8),2); session['hilo_card']=nc
+        session['hilo_streak']+=1
+        # ЩЕДРЕЕ: множители 2.0 / 15.0
+        session['hilo_mult']=round(session['hilo_mult']*(15.0 if guess=='same' else 2.0),2)
+        session['hilo_card']=nc
         return jsonify({'success':True,'correct':True,'new_card':nc,'streak':session['hilo_streak'],'multiplier':session['hilo_mult'],'current_payout':round(bet*session['hilo_mult'],2)})
-    session['hilo_active']=False; new_bal,profit,_=record_game(session['user_id'],'Хай-Лоу',bet,False,0,f'Streak {session["hilo_streak"]}')
+    session['hilo_active']=False
+    new_bal,profit,_=record_game(session['user_id'],'Хай-Лоу',bet,False,0,f'Streak {session["hilo_streak"]}')
     log_game_result(get_username(),'Хай-Лоу',bet,False,profit,0,new_bal)
     return jsonify({'success':True,'correct':False,'new_card':nc,'balance':new_bal,'profit':profit})
 
@@ -683,7 +774,7 @@ def api_hilo_cashout():
     log_game_result(get_username(),'Хай-Лоу',bet,True,profit,payout,new_bal)
     return jsonify({'success':True,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
-# 9. RACES
+# 9. RACES — фаворит побеждает чаще
 @app.route('/game/races')
 @login_required
 def game_races():
@@ -697,8 +788,12 @@ def api_game_races():
     if err: return err
     user = current_user(); data = request.get_json(); bet, e = validate_bet(user, data)
     if e: return e
-    chosen=max(1,min(6,int(data.get('horse',1)))); horses=['Молния','Буран','Стрела','Гром','Ветер','Комета']; odds=[2.5,3.0,4.0,5.0,7.0,10.0]
-    winner=random.choices(range(1,7),weights=[1/o for o in odds],k=1)[0]
+    chosen=max(1,min(6,int(data.get('horse',1))))
+    horses=['Молния','Буран','Стрела','Гром','Ветер','Комета']
+    odds=[2.2, 2.8, 3.5, 4.5, 6.0, 9.0]  # ЩЕДРЕЕ: чуть выше коэффициенты
+    # Веса: обратно пропорциональны odds (фаворит чаще побеждает)
+    weights = [1/o for o in odds]
+    winner = random.choices(range(1,7), weights=weights, k=1)[0]
     positions=[]
     for step in range(20):
         sp=[]
@@ -714,7 +809,7 @@ def api_game_races():
     log_game_result(get_username(),'Скачки',bet,is_win,profit,payout,new_bal)
     return jsonify({'success':True,'winner':winner,'chosen':chosen,'horses':[f'🏇 {h}' for h in horses],'odds':odds,'positions':positions,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
-# 10. WHEEL
+# 10. WHEEL — исправлена синхронизация угла + щедрее веса
 @app.route('/game/wheel')
 @login_required
 def game_wheel():
@@ -728,16 +823,43 @@ def api_game_wheel():
     if err: return err
     user = current_user(); data = request.get_json(); bet, e = validate_bet(user, data)
     if e: return e
-    segments=[{'label':'x0','mult':0,'color':'#1a1a2e','weight':20},{'label':'x0.5','mult':0.5,'color':'#4a1942','weight':25},{'label':'x1','mult':1,'color':'#6b21a8','weight':20},{'label':'x1.5','mult':1.5,'color':'#7c3aed','weight':15},{'label':'x2','mult':2,'color':'#2563eb','weight':10},{'label':'x3','mult':3,'color':'#059669','weight':5},{'label':'x5','mult':5,'color':'#d97706','weight':3},{'label':'x10','mult':10,'color':'#dc2626','weight':1.5},{'label':'x25','mult':25,'color':'#f59e0b','weight':0.4},{'label':'x50','mult':50,'color':'#10b981','weight':0.1}]
-    idx=random.choices(range(len(segments)),weights=[s['weight'] for s in segments],k=1)[0]
-    result=segments[idx]; mult=result['mult']; payout=bet*mult; is_win=mult>0
-    sa=360/len(segments); ta=360*5+(360-idx*sa-sa/2)
-    new_bal,profit,_=record_game(session['user_id'],'Колесо',bet,is_win,payout,f'Колесо: {result["label"]}')
-    log_game_result(get_username(),'Колесо',bet,is_win,profit,payout,new_bal)
-    return jsonify({'success':True,'segment_index':idx,'segments':segments,'multiplier':mult,'label':result['label'],'target_angle':ta,'payout':payout,'profit':profit,'is_win':is_win,'balance':new_bal})
+    # ЩЕДРЕЕ: убрал x0, повысил веса выигрышных
+    segments = [
+        {'label':'x0.5','mult':0.5,'color':'#4a1942','weight':22},
+        {'label':'x1',  'mult':1,  'color':'#6b21a8','weight':25},
+        {'label':'x1.5','mult':1.5,'color':'#7c3aed','weight':20},
+        {'label':'x2',  'mult':2,  'color':'#2563eb','weight':15},
+        {'label':'x3',  'mult':3,  'color':'#059669','weight':10},
+        {'label':'x5',  'mult':5,  'color':'#d97706','weight':5},
+        {'label':'x10', 'mult':10, 'color':'#dc2626','weight':2},
+        {'label':'x25', 'mult':25, 'color':'#f59e0b','weight':0.7},
+        {'label':'x50', 'mult':50, 'color':'#10b981','weight':0.3},
+    ]
+    idx = random.choices(range(len(segments)), weights=[s['weight'] for s in segments], k=1)[0]
+    result = segments[idx]
+    mult = result['mult']
+    payout = bet * mult
+    is_win = mult > 1  # x0.5 не считаем выигрышем
+
+    new_bal, profit, _ = record_game(
+        session['user_id'], 'Колесо', bet, is_win,
+        payout, f'Колесо: {result["label"]}'
+    )
+    log_game_result(get_username(), 'Колесо', bet, is_win, profit, payout, new_bal)
+    return jsonify({
+        'success': True,
+        'segment_index': idx,
+        'segments': segments,
+        'multiplier': mult,
+        'label': result['label'],
+        'payout': payout,
+        'profit': profit,
+        'is_win': is_win,
+        'balance': new_bal
+    })
 
 
-# ═══════════════════════════════════════
+# ─── stats/inactive threads ───
 
 def stats_printer():
     while True: time.sleep(300); console.print_stats()
@@ -751,11 +873,12 @@ def inactive_checker():
                 set_user_online(uid, False)
                 console.log_disconnect(data['username'], uid)
 
+
 # ═══════════════════════════════════════
-#       NEW GAMES + CHAT
+#       NEW GAMES (Tower, Limbo, Penalty, Keno) + CHAT
 # ═══════════════════════════════════════
 
-# ── 11. TOWER ──
+# ── 11. TOWER ── (щедрее)
 
 @app.route('/game/tower')
 @login_required
@@ -775,15 +898,10 @@ def api_tower_start():
     if e: return e
 
     difficulty = data.get('difficulty', 'medium')
-    # easy=4 двери (1 ловушка), medium=3 двери (1), hard=2 двери (1)
     doors_map = {'easy': 4, 'medium': 3, 'hard': 2}
     num_doors = doors_map.get(difficulty, 3)
 
-    # Генерируем ловушки для 10 этажей
-    floors = []
-    for _ in range(10):
-        trap = random.randint(0, num_doors - 1)
-        floors.append(trap)
+    floors = [random.randint(0, num_doors - 1) for _ in range(10)]
 
     session['tower_floors'] = floors
     session['tower_bet'] = bet
@@ -792,9 +910,9 @@ def api_tower_start():
     session['tower_difficulty'] = difficulty
     session['tower_active'] = True
 
-    # Множители по этажам
-    base = num_doors / (num_doors - 1)  # шанс выживания
-    multipliers = [round(base ** (i + 1) * 0.97, 2) for i in range(10)]
+    # ЩЕДРЕЕ: edge всего 1%
+    base = num_doors / (num_doors - 1)
+    multipliers = [round(base ** (i + 1) * 0.99, 2) for i in range(10)]
     session['tower_multipliers'] = multipliers
 
     return jsonify({
@@ -828,7 +946,6 @@ def api_tower_choose():
         current_mult = multipliers[level]
         current_payout = round(bet * current_mult, 2)
 
-        # Если прошёл все 10 этажей — автокэшаут
         if level + 1 >= 10:
             session['tower_active'] = False
             new_bal, profit, _ = record_game(
@@ -891,7 +1008,7 @@ def api_tower_cashout():
     })
 
 
-# ── 12. LIMBO ──
+# ── 12. LIMBO — минимальный edge
 
 @app.route('/game/limbo')
 @login_required
@@ -911,14 +1028,12 @@ def api_game_limbo():
     if e: return e
 
     target = float(data.get('target', 2.0))
-    if target < 1.01:
-        target = 1.01
-    if target > 1000:
-        target = 1000
+    if target < 1.01: target = 1.01
+    if target > 1000: target = 1000
 
-    # Генерируем результат (house edge ~2%)
     r = random.random()
-    result = round(0.98 / r, 2) if r > 0 else 1000.0
+    # ЩЕДРЕЕ: edge 0.5% (было 2%)
+    result = round(0.995 / r, 2) if r > 0 else 1000.0
     result = min(result, 1000.0)
 
     is_win = result >= target
@@ -938,7 +1053,7 @@ def api_game_limbo():
     })
 
 
-# ── 13. PENALTY ──
+# ── 13. PENALTY — вратарь реже дотягивается
 
 @app.route('/game/penalty')
 @login_required
@@ -957,39 +1072,30 @@ def api_game_penalty():
     bet, e = validate_bet(user, data)
     if e: return e
 
-    kick_pos = int(data.get('kick', 4))  # 0-8 (3x3 grid)
-    if kick_pos < 0 or kick_pos > 8:
-        kick_pos = 4
+    kick_pos = int(data.get('kick', 4))
+    if kick_pos < 0 or kick_pos > 8: kick_pos = 4
 
-    # Вратарь ныряет (может поймать 1-2 позиции)
     keeper_main = random.randint(0, 8)
-
-    # Соседние позиции вратаря (может дотянуться)
     adjacent = {
         0: [1, 3], 1: [0, 2, 4], 2: [1, 5],
         3: [0, 4, 6], 4: [1, 3, 5, 7], 5: [2, 4, 8],
         6: [3, 7], 7: [4, 6, 8], 8: [5, 7]
     }
 
-    # 30% шанс что вратарь дотянется до соседней
     keeper_positions = {keeper_main}
-    if random.random() < 0.30 and adjacent.get(keeper_main):
+    # ЩЕДРЕЕ: 15% вместо 30% что дотянется
+    if random.random() < 0.15 and adjacent.get(keeper_main):
         extra = random.choice(adjacent[keeper_main])
         keeper_positions.add(extra)
 
     is_goal = kick_pos not in keeper_positions
 
-    # Множители: углы x3, центры сторон x2.5, центр x2
     corners = {0, 2, 6, 8}
     edges = {1, 3, 5, 7}
-    center = {4}
 
-    if kick_pos in corners:
-        mult = 3.0
-    elif kick_pos in edges:
-        mult = 2.5
-    else:
-        mult = 2.0
+    if kick_pos in corners: mult = 3.5    # ЩЕДРЕЕ
+    elif kick_pos in edges: mult = 2.8
+    else: mult = 2.2
 
     payout = round(bet * mult, 2) if is_goal else 0
 
@@ -1007,7 +1113,7 @@ def api_game_penalty():
     })
 
 
-# ── 14. KENO ──
+# ── 14. KENO — щедрее выплаты
 
 @app.route('/game/keno')
 @login_required
@@ -1030,33 +1136,31 @@ def api_game_keno():
     if not chosen or len(chosen) < 1 or len(chosen) > 10:
         return jsonify({'success': False, 'message': 'Выберите от 1 до 10 чисел'})
 
-    # Валидация
     chosen = [int(n) for n in chosen if 1 <= int(n) <= 40]
     chosen = list(set(chosen))[:10]
 
-    # Розыгрыш: 10 случайных из 40
     drawn = sorted(random.sample(range(1, 41), 10))
     hits = sorted(set(chosen) & set(drawn))
     num_hits = len(hits)
     num_chosen = len(chosen)
 
-    # Таблица выплат (множители)
+    # ЩЕДРЕЕ: множители подняты + добавлены выплаты за меньшее число попаданий
     payout_table = {
-        1:  {1: 3.5},
-        2:  {1: 1.5, 2: 5},
-        3:  {1: 1, 2: 2.5, 3: 10},
-        4:  {2: 2, 3: 5, 4: 25},
-        5:  {2: 1.5, 3: 3, 4: 10, 5: 50},
-        6:  {3: 2, 4: 5, 5: 20, 6: 100},
-        7:  {3: 1.5, 4: 3, 5: 10, 6: 50, 7: 200},
-        8:  {4: 2, 5: 5, 6: 20, 7: 100, 8: 500},
-        9:  {4: 1.5, 5: 3, 6: 10, 7: 50, 8: 250, 9: 1000},
-        10: {5: 2, 6: 5, 7: 20, 8: 100, 9: 500, 10: 2500},
+        1:  {0: 0.5, 1: 4},
+        2:  {1: 2,   2: 8},
+        3:  {1: 1.2, 2: 4,   3: 15},
+        4:  {2: 3,   3: 8,   4: 40},
+        5:  {2: 2,   3: 5,   4: 15,  5: 80},
+        6:  {3: 3,   4: 8,   5: 30,  6: 150},
+        7:  {3: 2,   4: 5,   5: 15,  6: 80,   7: 300},
+        8:  {4: 3,   5: 8,   6: 30,  7: 150,  8: 750},
+        9:  {4: 2,   5: 5,   6: 15,  7: 80,   8: 400,  9: 1500},
+        10: {5: 3,   6: 8,   7: 30,  8: 150,  9: 750, 10: 5000},
     }
 
     mult = payout_table.get(num_chosen, {}).get(num_hits, 0)
     payout = round(bet * mult, 2)
-    is_win = mult > 0
+    is_win = mult > 1  # >x1 считаем реальным выигрышем
 
     details = f'Выбрано {num_chosen}, попаданий {num_hits}, x{mult}'
     new_bal, profit, _ = record_game(session['user_id'], 'Кено', bet, is_win, payout, details)
@@ -1081,20 +1185,12 @@ def api_game_keno():
 def api_chat_send():
     data = request.get_json()
     message = data.get('message', '').strip()
-
-    if not message:
-        return jsonify({'success': False})
-    if len(message) > 500:
-        message = message[:500]
-
-    # Проверка бана
+    if not message: return jsonify({'success': False})
+    if len(message) > 500: message = message[:500]
     user = current_user()
     if user.get('is_banned'):
         return jsonify({'success': False, 'message': 'Вы заблокированы'})
-
     send_chat_message(session['user_id'], get_username(), message)
-    console.log_page(get_username(), f'💬 chat: {message[:50]}')
-
     return jsonify({'success': True})
 
 
@@ -1104,6 +1200,7 @@ def api_chat_messages():
     after_id = int(request.args.get('after', 0))
     messages = get_chat_messages(50, after_id)
     return jsonify(messages)
+
 
 if __name__ == '__main__':
     HOST, PORT = '0.0.0.0', 14651

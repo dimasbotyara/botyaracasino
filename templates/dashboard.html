@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Casino — Dashboard{% endblock %}
+{% block title %}botyaracasino — Dashboard{% endblock %}
 {% block content %}
 <div class="slide-up">
 
@@ -38,20 +38,20 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 max-w-6xl mx-auto">
         {% set games = [
-        {'url':'/game/slots','icon':'🎰','name':'Слоты','desc':'Крути барабаны','mult':'до x50','color':'violet'},
-        {'url':'/game/dice','icon':'🎲','name':'Кости','desc':'Угадай результат','mult':'до x6','color':'emerald'},
-        {'url':'/game/roulette','icon':'🎡','name':'Рулетка','desc':'Красное или чёрное','mult':'до x36','color':'red'},
-        {'url':'/game/coinflip','icon':'🪙','name':'Монетка','desc':'Орёл или решка','mult':'x1.95','color':'amber'},
-        {'url':'/game/crash','icon':'📈','name':'Краш','desc':'Забери до краша','mult':'до x100','color':'rose'},
-        {'url':'/game/blackjack','icon':'🃏','name':'Блэкджек','desc':'Набери 21','mult':'x2.5','color':'blue'},
-        {'url':'/game/mines','icon':'💣','name':'Мины','desc':'Избегай мин','mult':'до x24','color':'orange'},
+        {'url':'/game/slots','icon':'🎰','name':'Слоты','desc':'Крути барабаны','mult':'до x100','color':'violet'},
+        {'url':'/game/dice','icon':'🎲','name':'Кости','desc':'Угадай результат','mult':'до x8','color':'emerald'},
+        {'url':'/game/roulette','icon':'🎡','name':'Рулетка','desc':'Красное или чёрное','mult':'до x40','color':'red'},
+        {'url':'/game/coinflip','icon':'🪙','name':'Монетка','desc':'Орёл или решка','mult':'x2.0','color':'amber'},
+        {'url':'/game/crash','icon':'📈','name':'Краш','desc':'Забери до краша','mult':'до x200','color':'rose'},
+        {'url':'/game/blackjack','icon':'🃏','name':'Блэкджек','desc':'Набери 21','mult':'x3','color':'blue'},
+        {'url':'/game/mines','icon':'💣','name':'Мины','desc':'Избегай мин','mult':'до ∞','color':'orange'},
         {'url':'/game/hilo','icon':'🎱','name':'Хай-Лоу','desc':'Выше или ниже','mult':'∞','color':'cyan'},
-        {'url':'/game/races','icon':'🏇','name':'Скачки','desc':'Выбери лошадь','mult':'до x10','color':'pink'},
+        {'url':'/game/races','icon':'🏇','name':'Скачки','desc':'Выбери лошадь','mult':'до x9','color':'pink'},
         {'url':'/game/wheel','icon':'🎯','name':'Колесо','desc':'Крути колесо','mult':'до x50','color':'yellow'},
-        {'url':'/game/tower','icon':'🗼','name':'Башня','desc':'Поднимайся по этажам','mult':'до x∞','color':'amber'},
+        {'url':'/game/tower','icon':'🗼','name':'Башня','desc':'Поднимайся по этажам','mult':'до ∞','color':'amber'},
         {'url':'/game/limbo','icon':'🎯','name':'Лимбо','desc':'Задай множитель','mult':'до x1000','color':'purple'},
-        {'url':'/game/penalty','icon':'⚽','name':'Пенальти','desc':'Забей мимо вратаря','mult':'до x3','color':'emerald'},
-        {'url':'/game/keno','icon':'🎱','name':'Кено','desc':'Выбери числа','mult':'до x2500','color':'teal'}
+        {'url':'/game/penalty','icon':'⚽','name':'Пенальти','desc':'Забей мимо вратаря','mult':'до x3.5','color':'emerald'},
+        {'url':'/game/keno','icon':'🎱','name':'Кено','desc':'Выбери числа','mult':'до x5000','color':'teal'}
         ] %}
         {% for g in games %}
         <a href="{{ g.url }}" class="card-hover glass neon-border rounded-2xl p-5 block group">
