@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% block title %}👤 {{ target.username }} — Админка{% endblock %}
+{% block content %}
+<div class="slide-up max-w-4xl mx-auto">
+    <div class="flex items-center gap-3 mb-8">
+        <a href="/admin" class="text-gray-400 hover:text-violet-400 transition">← Админка</a>
+        <h1 class="text-3xl font-black">👤 {{ target.username }}</h1>
+        <span class="px-3 py-1 rounded-full text-sm font-bold {{ level_info.name }}
+            {% if target.is_banned %}bg-red-500/20 text-red-400 border border-red-500/30
+            {% elif target.is_admin %}bg-amber-500/20 text-amber-400 border border-amber-500/30
+            {% elif target.is_online %}bg-emerald-500/20 text-emerald-400 border border-emerald-500/30
+            {% else %}bg-gray-500/20 text-gray-400 border border-gray-500/30{% endif %}">
+            {% if target.is_banned %}🚫 Забанен
+            {% elif target.is_admin %}👑 Админ
+            {% elif target.is_online %}🟢 Онлайн
+            {% else %}⚫ Оффлайн{% endif %}
+        </span>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div class="glass neon-border rounded-xl p-4 text-center">
+            <p class="text-gray-400 text-xs">Баланс</p>
+            <p class="text-2xl font-black text-emerald-400">{{ "%.0f"|format(target.balance) }}₽</p>
+        </div>
+        <div class="glass neon-border rounded-xl p-4 text-center">
+            <p class="text-gray-400 text-xs">Депозиты</p>
+            <p class="text-2xl font-black text-amber-400">{{ "%.0f"|format(target.total_deposited) }}₽</p>
+        </div>
+        <div class="glass neon-border rounded-xl p-4 text-center">
+            <p class="text-gray-400 text-xs">Поставлено</p>
+            <p class="text-2xl font-black text-violet-400">{{ "%.0f"|format(target.total_wagered) }}₽</p>
+        </div>
+        <div class="glass neon-border rounded-xl p-4 text-center">
+            <p class="text-gray-400 text-xs">Игр / Побед</p>
+            <p class="text-2xl font-black text-white">{{ target.games_played }} / {{ target.games_won }}</p>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="glass neon-border rounded-2xl p-6 mb-8">
+        <h3 class="text-lg font-bold mb-4">⚡ Действия</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-gray-400">Установить баланс</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="number" id="new-balance" value="{{ target.balance|int }}"
+                           class="flex-1 bg-black/40 border border-violet-500/30 rounded-lg px-3 py-2 text-white">
+                    <button onclick="setBalance()" class="btn-neon text-white px-4 py-2 rounded-lg text-sm">Установить</button>
+                </div>
+            </div>
+            <div>
+                <label class="text-sm text-gray-400">Добавить / Снять</label>
+                <div class="flex gap-2 mt-1">
+                    <input type="number" id="add-amount" placeholder="Сумма"
+                           class="flex-1 bg-black/40 border border-violet-500/30 rounded-lg px-3 py-2 text-white">
+                    <button onclick="addBal()" class="btn-green text-white px-3 py-2 rounded-lg text-sm">+</button>
+                    <button onclick="removeBal()" class="btn-red text-white px-3 py-2 rounded-lg text-sm">−</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+            {% if target.is_online %}
+            <button onclick="kick()" class="bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-sm font-bold">👢 Кик</button>
+            {% endif %}
+            {% if admin_level in ['owner', 'super_admin'] %}
+            {% if target.is_banned %}
+            <button onclick="unban()" class="btn-green text-white px-4 py-2 rounded-lg text-sm font-bold">✅ Разбанить</button>
+            {% else %}
+            <button onclick="ban()" class="btn-red text-white px-4 py-2 rounded-lg text-sm font-bold">🚫 Забанить</button>
+            {% endif %}
+            <button onclick="resetStats()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold">🔄 Сброс стата</button>
+            {% endif %}
+            {% if admin_level == 'owner' %}
+            <button onclick="del_user()" class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold">🗑️ Удалить аккаунт</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Game History -->
+    <div class="glass neon-border rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-4">📜 История игр (последние 50)</h3>
+        {% if history %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="text-gray-400 border-b border-gray-700">
+                        <th class="text-left py-2 px-2">Игра</th>
+                        <th class="text-right py-2 px-2">Ставка</th>
+                        <th class="text-center py-2 px-2">Итог</th>
+                        <th class="text-right py-2 px-2">Профит</th>
+                        <th class="text-left py-2 px-2">Детали</th>
+                        <th class="text-right py-2 px-2">Время</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr class="border-b border-gray-800/50">
+                        <td class="py-1 px-2">{{ h.game_type }}</td>
+                        <td class="py-1 px-2 text-right">{{ "%.0f"|format(h.bet_amount) }}₽</td>
+                        <td class="py-1 px-2 text-center {% if h.result=='win' %}text-emerald-400{% else %}text-red-400{% endif %}">{{ h.result|upper }}</td>
+                        <td class="py-1 px-2 text-right font-bold {% if h.profit>=0 %}text-emerald-400{% else %}text-red-400{% endif %}">{{ "%+.0f"|format(h.profit) }}₽</td>
+                        <td class="py-1 px-2 text-gray-500 max-w-[200px] truncate">{{ h.details }}</td>
+                        <td class="py-1 px-2 text-right text-gray-500">{{ h.played_at[11:19] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-4">Нет истории</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const uid = {{ target.id }};
+const uname = '{{ target.username }}';
+
+async function apiPost(url, data) {
+    const r = await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+    return await r.json();
+}
+
+async function setBalance() {
+    const bal = parseFloat(document.getElementById('new-balance').value);
+    const d = await apiPost('/admin/api/set_balance',{user_id:uid,balance:bal});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),800);
+}
+
+async function addBal() {
+    const amt = parseFloat(document.getElementById('add-amount').value);
+    if(!amt) return;
+    const d = await apiPost('/admin/api/add_balance',{user_id:uid,amount:amt});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),800);
+}
+
+async function removeBal() {
+    const amt = parseFloat(document.getElementById('add-amount').value);
+    if(!amt) return;
+    const d = await apiPost('/admin/api/add_balance',{user_id:uid,amount:-amt});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),800);
+}
+
+async function kick() {
+    if(!confirm('Кикнуть '+uname+'?')) return;
+    const d = await apiPost('/admin/api/kick',{user_id:uid});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),500);
+}
+
+async function ban() {
+    const reason = prompt('Причина бана:', 'Нарушение правил');
+    if(reason===null) return;
+    const d = await apiPost('/admin/api/ban',{user_id:uid,reason});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),500);
+}
+
+async function unban() {
+    const d = await apiPost('/admin/api/unban',{user_id:uid});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),500);
+}
+
+async function resetStats() {
+    if(!confirm('Сбросить статистику '+uname+'?')) return;
+    const d = await apiPost('/admin/api/reset_stats',{user_id:uid});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(),500);
+}
+
+async function del_user() {
+    if(!confirm('⚠️ УДАЛИТЬ '+uname+'? Необратимо!')) return;
+    if(!confirm('ТОЧНО удалить?')) return;
+    const d = await apiPost('/admin/api/delete_user',{user_id:uid});
+    showToast(d.message,d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.href='/admin',500);
+}
+</script>
+{% endblock %}

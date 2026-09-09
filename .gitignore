@@ -1,0 +1,6 @@
+.secret_key
+casino.db
+__pycache__/
+*.pyc
+.vscode/
+.idea/

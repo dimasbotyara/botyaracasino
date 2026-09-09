@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}⚙️ Настройки — Админка{% endblock %}
+{% block content %}
+<div class="slide-up max-w-3xl mx-auto">
+    <div class="flex items-center gap-3 mb-8">
+        <a href="/admin" class="text-gray-400 hover:text-violet-400 transition">← Админка</a>
+        <h1 class="text-3xl font-black">⚙️ Настройки сервера</h1>
+    </div>
+
+    <div class="glass neon-border rounded-2xl p-6 mb-6">
+        <h3 class="text-lg font-bold mb-4">💰 Экономика</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="text-sm text-gray-400">Лимит депозита (₽)</label>
+                <input type="number" id="s-deposit_limit" value="{{ settings.deposit_limit }}"
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-2 text-white mt-1 focus:outline-none focus:border-violet-500">
+            </div>
+            <div>
+                <label class="text-sm text-gray-400">Мин. ставка (₽)</label>
+                <input type="number" id="s-min_bet" value="{{ settings.min_bet }}"
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-2 text-white mt-1 focus:outline-none focus:border-violet-500">
+            </div>
+            <div>
+                <label class="text-sm text-gray-400">Макс. ставка (0 = без лимита)</label>
+                <input type="number" id="s-max_bet" value="{{ settings.max_bet }}"
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-2 text-white mt-1 focus:outline-none focus:border-violet-500">
+            </div>
+            <div>
+                <label class="text-sm text-gray-400">Бонус за регистрацию (₽)</label>
+                <input type="number" id="s-welcome_bonus" value="{{ settings.welcome_bonus }}"
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-2 text-white mt-1 focus:outline-none focus:border-violet-500">
+            </div>
+        </div>
+    </div>
+
+    <div class="glass neon-border rounded-2xl p-6 mb-6">
+        <h3 class="text-lg font-bold mb-4">🔧 Сервер</h3>
+        <div class="space-y-4">
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="s-registration_open" {% if settings.registration_open %}checked{% endif %}
+                       class="w-5 h-5 accent-violet-500">
+                <span>Регистрация открыта</span>
+            </label>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" id="s-maintenance_mode" {% if settings.maintenance_mode %}checked{% endif %}
+                       class="w-5 h-5 accent-red-500">
+                <span>Режим обслуживания <span class="text-gray-500 text-xs">(доступ только админам)</span></span>
+            </label>
+        </div>
+    </div>
+
+    <div class="glass neon-border rounded-2xl p-6 mb-6">
+        <h3 class="text-lg font-bold mb-4">🎮 Управление играми</h3>
+        <p class="text-gray-400 text-sm mb-3">Отключённые игры будут недоступны</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {% set all_games = ['Слоты','Кости','Рулетка','Монетка','Краш','Блэкджек','Мины','Хай-Лоу','Скачки','Колесо'] %}
+            {% set disabled = settings.disabled_games if settings.disabled_games else [] %}
+            {% for game in all_games %}
+            <label class="flex items-center gap-2 cursor-pointer bg-black/20 rounded-lg p-2">
+                <input type="checkbox" class="game-toggle w-4 h-4 accent-emerald-500"
+                       data-game="{{ game }}" {% if game not in disabled %}checked{% endif %}>
+                <span class="text-sm">{{ game }}</span>
+            </label>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button onclick="saveSettings()" class="btn-neon text-white w-full py-3 rounded-xl font-bold text-lg neon-glow">
+        💾 Сохранить настройки
+    </button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function saveSettings() {
+    const data = {
+        deposit_limit: parseInt(document.getElementById('s-deposit_limit').value) || 150000,
+        min_bet: parseInt(document.getElementById('s-min_bet').value) || 1,
+        max_bet: parseInt(document.getElementById('s-max_bet').value) || 0,
+        welcome_bonus: parseInt(document.getElementById('s-welcome_bonus').value) || 0,
+        registration_open: document.getElementById('s-registration_open').checked,
+        maintenance_mode: document.getElementById('s-maintenance_mode').checked,
+    };
+
+    // Disabled games
+    const disabled = [];
+    document.querySelectorAll('.game-toggle').forEach(cb => {
+        if (!cb.checked) disabled.push(cb.dataset.game);
+    });
+    data.disabled_games = disabled;
+
+    const r = await fetch('/admin/api/update_settings', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+    const d = await r.json();
+    showToast(d.message, d.success ? 'success' : 'error');
+}
+</script>
+{% endblock %}

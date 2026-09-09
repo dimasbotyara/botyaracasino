@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Casino — Dashboard{% endblock %}
+{% block content %}
+<div class="slide-up">
+
+    <!-- Broadcast -->
+    {% if broadcast %}
+    <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 text-center" id="broadcast-bar">
+        <p class="text-amber-300 font-bold">📢 {{ broadcast.message }}</p>
+        <p class="text-xs text-gray-500 mt-1">от {{ broadcast.from_admin }}</p>
+    </div>
+    {% endif %}
+
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-black mb-2">
+            Добро пожаловать, <span class="neon-text">{{ user.username }}</span>! 🎉
+        </h1>
+        <p class="text-gray-400">Выбери игру и испытай удачу</p>
+
+        <!-- Admin button -->
+        {% if admin_level and admin_level != 'user' %}
+        <a href="/admin" class="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-xl text-sm font-bold
+            bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition">
+            🛡️ Админ-панель
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="glass neon-border rounded-2xl p-6 mb-10 max-w-lg mx-auto text-center">
+        <p class="text-gray-400 text-sm mb-1">Ваш баланс</p>
+        <p class="text-4xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+        <button onclick="openDepositModal()" class="btn-green text-white px-6 py-2 rounded-xl text-sm font-bold mt-4">
+            💰 Пополнить баланс
+        </button>
+    </div>
+
+    <h2 class="text-2xl font-bold mb-6 text-center">🎮 Мини-игры</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 max-w-6xl mx-auto">
+        {% set games = [
+        {'url':'/game/slots','icon':'🎰','name':'Слоты','desc':'Крути барабаны','mult':'до x50','color':'violet'},
+        {'url':'/game/dice','icon':'🎲','name':'Кости','desc':'Угадай результат','mult':'до x6','color':'emerald'},
+        {'url':'/game/roulette','icon':'🎡','name':'Рулетка','desc':'Красное или чёрное','mult':'до x36','color':'red'},
+        {'url':'/game/coinflip','icon':'🪙','name':'Монетка','desc':'Орёл или решка','mult':'x1.95','color':'amber'},
+        {'url':'/game/crash','icon':'📈','name':'Краш','desc':'Забери до краша','mult':'до x100','color':'rose'},
+        {'url':'/game/blackjack','icon':'🃏','name':'Блэкджек','desc':'Набери 21','mult':'x2.5','color':'blue'},
+        {'url':'/game/mines','icon':'💣','name':'Мины','desc':'Избегай мин','mult':'до x24','color':'orange'},
+        {'url':'/game/hilo','icon':'🎱','name':'Хай-Лоу','desc':'Выше или ниже','mult':'∞','color':'cyan'},
+        {'url':'/game/races','icon':'🏇','name':'Скачки','desc':'Выбери лошадь','mult':'до x10','color':'pink'},
+        {'url':'/game/wheel','icon':'🎯','name':'Колесо','desc':'Крути колесо','mult':'до x50','color':'yellow'},
+        {'url':'/game/tower','icon':'🗼','name':'Башня','desc':'Поднимайся по этажам','mult':'до x∞','color':'amber'},
+        {'url':'/game/limbo','icon':'🎯','name':'Лимбо','desc':'Задай множитель','mult':'до x1000','color':'purple'},
+        {'url':'/game/penalty','icon':'⚽','name':'Пенальти','desc':'Забей мимо вратаря','mult':'до x3','color':'emerald'},
+        {'url':'/game/keno','icon':'🎱','name':'Кено','desc':'Выбери числа','mult':'до x2500','color':'teal'}
+        ] %}
+        {% for g in games %}
+        <a href="{{ g.url }}" class="card-hover glass neon-border rounded-2xl p-5 block group">
+            <div class="text-4xl mb-3 text-center group-hover:scale-110 transition">{{ g.icon }}</div>
+            <h3 class="text-lg font-bold text-center mb-1">{{ g.name }}</h3>
+            <p class="text-gray-400 text-xs text-center mb-3">{{ g.desc }}</p>
+            <div class="text-center">
+                <span class="text-xs bg-{{ g.color }}-500/20 text-{{ g.color }}-300 px-3 py-1 rounded-full">{{ g.mult }}</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Check broadcast periodically
+    setInterval(async () => {
+        try {
+            const r = await fetch('/api/balance');
+            const d = await r.json();
+            updateBalance(d.balance);
+            if (d.broadcast) {
+                let bar = document.getElementById('broadcast-bar');
+                if (!bar) {
+                    bar = document.createElement('div');
+                    bar.id = 'broadcast-bar';
+                    bar.className = 'bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 mb-6 text-center slide-up';
+                    document.querySelector('.slide-up').prepend(bar);
+                }
+                bar.innerHTML = `<p class="text-amber-300 font-bold">📢 ${d.broadcast}</p>`;
+            }
+        } catch (e) { }
+    }, 5000);
+</script>
+{% endblock %}

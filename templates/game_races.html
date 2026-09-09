@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% block title %}🏇 Скачки{% endblock %}
+{% block content %}
+<div class="slide-up max-w-3xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
+        <h1 class="text-3xl font-black">🏇 Скачки</h1>
+    </div>
+    <div class="glass neon-border rounded-3xl p-8">
+        <div class="mb-6 text-center">
+            <p class="text-gray-400 text-sm mb-1">Баланс</p>
+            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+        </div>
+
+        <!-- Race Track -->
+        <div class="space-y-3 mb-6">
+            {% for i in range(6) %}
+            <div class="flex items-center gap-2">
+                <span class="w-6 text-sm text-gray-400">{{ i+1 }}</span>
+                <div class="flex-1 bg-black/40 rounded-xl h-10 relative overflow-hidden border border-gray-800">
+                    <div id="horse-{{i}}" class="absolute left-0 top-0 h-full bg-gradient-to-r from-violet-500/30 to-violet-500/10 rounded-xl transition-all duration-300 flex items-center justify-end pr-2" style="width: 5%">
+                        <span class="text-lg">🏇</span>
+                    </div>
+                </div>
+                <span class="text-xs text-amber-400 font-bold w-10" id="odds-{{i}}">x{{ [2.5,3.0,4.0,5.0,7.0,10.0][i] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="result-area" class="mb-6 h-14 flex items-center justify-center text-center">
+            <p class="text-gray-500">Выбери лошадь и ставку!</p>
+        </div>
+
+        <!-- Controls -->
+        <div id="race-setup" class="text-center">
+            <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-4">
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">Ставка</label>
+                    <input type="number" id="bet-amount" min="1" value="100" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">Лошадь</label>
+                    <select id="horse-pick" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold">
+                        <option value="1">1 — Молния (x2.5)</option>
+                        <option value="2">2 — Буран (x3.0)</option>
+                        <option value="3">3 — Стрела (x4.0)</option>
+                        <option value="4">4 — Гром (x5.0)</option>
+                        <option value="5">5 — Ветер (x7.0)</option>
+                        <option value="6">6 — Комета (x10)</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="startRace()" class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">🏁 СТАРТ</button>
+        </div>
+
+        <div id="race-new" class="hidden text-center">
+            <button onclick="resetRace()" class="btn-neon text-white px-8 py-3 rounded-xl font-bold">🔄 Новый заезд</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+bal={{user.balance}}, racing=false;
+
+async function startRace(){
+    if(racing) return;
+    const bet=parseFloat(document.getElementById('bet-amount').value);
+    const horse=parseInt(document.getElementById('horse-pick').value);
+    if(!bet||bet<=0) return showToast('Введите ставку','error');
+    if(bet>bal) return showToast('Недостаточно средств','error');
+    racing=true;
+    document.getElementById('race-setup').classList.add('hidden');
+    document.getElementById('result-area').innerHTML='<p class="text-amber-400 font-bold animate-pulse">🏁 Гонка идёт!</p>';
+
+    const r=await fetch('/api/game/races',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bet,horse})});
+    const d=await r.json();
+
+    if(d.success){
+        // Animate race
+        let step=0;
+        const anim=setInterval(()=>{
+            if(step>=d.positions.length){
+                clearInterval(anim);
+                // Show result
+                for(let i=0;i<6;i++){
+                    const bar=document.getElementById('horse-'+i);
+                    if(i+1===d.winner) bar.style.background='linear-gradient(90deg, rgba(16,185,129,0.4), rgba(16,185,129,0.1))';
+                    else bar.style.background='';
+                }
+                bal=d.balance; updateBalance(bal);
+                const ra=document.getElementById('result-area');
+                if(d.is_win){
+                    ra.innerHTML=`<div class="win-animation"><p class="text-2xl font-black text-emerald-400">🎉 ${d.horses[d.winner-1]} побеждает! +${Math.floor(d.payout)}₽</p></div>`;
+                } else {
+                    ra.innerHTML=`<p class="text-xl font-bold text-red-400">😢 ${d.horses[d.winner-1]} побеждает. -${Math.floor(bet)}₽</p>`;
+                }
+                document.getElementById('race-new').classList.remove('hidden');
+                racing=false;
+                return;
+            }
+            const pos=d.positions[step];
+            for(let i=0;i<6;i++){
+                document.getElementById('horse-'+i).style.width=pos[i]+'%';
+            }
+            step++;
+        },150);
+    }
+}
+
+function resetRace(){
+    for(let i=0;i<6;i++){
+        const bar=document.getElementById('horse-'+i);
+        bar.style.width='5%';
+        bar.style.background='';
+    }
+    document.getElementById('result-area').innerHTML='<p class="text-gray-500">Выбери лошадь и ставку!</p>';
+    document.getElementById('race-new').classList.add('hidden');
+    document.getElementById('race-setup').classList.remove('hidden');
+}
+</script>
+{% endblock %}

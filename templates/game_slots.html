@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}🎰 Слоты{% endblock %}
+{% block content %}
+<div class="slide-up max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
+        <h1 class="text-3xl font-black">🎰 Слоты</h1>
+    </div>
+
+    <div class="glass neon-border rounded-3xl p-8 text-center mb-6">
+        <div class="mb-6">
+            <p class="text-gray-400 text-sm mb-1">Баланс</p>
+            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+        </div>
+
+        <div class="flex justify-center gap-3 mb-6">
+            {% for r in range(3) %}
+            <div class="bg-black/60 rounded-2xl p-4 w-28 border border-violet-500/20">
+                <div id="reel-{{r}}-0" class="text-3xl py-1 opacity-40">🍒</div>
+                <div id="reel-{{r}}-1" class="text-4xl py-2 font-bold border-y border-violet-500/30 my-1">❓</div>
+                <div id="reel-{{r}}-2" class="text-3xl py-1 opacity-40">🍋</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="result-area" class="mb-6 h-16 flex items-center justify-center">
+            <p class="text-gray-500">Сделай ставку и крути!</p>
+        </div>
+
+        <div class="space-y-4">
+            <input type="number" id="bet-amount" min="1" value="100"
+                   class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-lg font-bold focus:outline-none focus:border-violet-500">
+            <div class="flex justify-center gap-2">
+                {% for v in [50,100,500,1000,5000] %}
+                <button onclick="document.getElementById('bet-amount').value={{v}}" class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">{{ v if v < 1000 else '%dK'|format(v//1000) }}</button>
+                {% endfor %}
+                <button onclick="document.getElementById('bet-amount').value=Math.floor(bal)" class="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1 text-sm hover:bg-red-500/20 text-red-400">ALL IN</button>
+            </div>
+            <button id="spin-btn" onclick="spin()" class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">🎰 КРУТИТЬ</button>
+        </div>
+    </div>
+
+    <div class="glass rounded-2xl p-6 border border-gray-800">
+        <h3 class="text-lg font-bold mb-3">📋 Выплаты</h3>
+        <div class="grid grid-cols-2 gap-2 text-sm">
+            {% for sym, mult in [('🍀🍀🍀','x50'),('7️⃣7️⃣7️⃣','x25'),('💎💎💎','x15'),('🍇🍇🍇','x7'),('🍊🍊🍊','x5'),('🍋🍋🍋','x4'),('🍒🍒🍒','x3'),('2 совпадения','x1.5')] %}
+            <div class="flex justify-between bg-black/20 rounded-lg p-2"><span>{{ sym }}</span><span class="text-emerald-400 font-bold">{{ mult }}</span></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let spinning=false, bal={{ user.balance }};
+const syms=['🍒','🍋','🍊','🍇','💎','7️⃣','🍀'];
+
+async function spin(){
+    if(spinning) return;
+    const bet=parseFloat(document.getElementById('bet-amount').value);
+    if(!bet||bet<=0) return showToast('Введите ставку','error');
+    if(bet>bal) return showToast('Недостаточно средств','error');
+
+    spinning=true;
+    document.getElementById('spin-btn').textContent='⏳ Крутим...';
+
+    let anim=setInterval(()=>{
+        for(let r=0;r<3;r++) for(let row=0;row<3;row++)
+            document.getElementById(`reel-${r}-${row}`).textContent=syms[Math.floor(Math.random()*syms.length)];
+    },80);
+
+    const resp=await fetch('/api/game/slots',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bet})});
+    const d=await resp.json();
+    await new Promise(r=>setTimeout(r,1200));
+    clearInterval(anim);
+
+    if(d.success){
+        for(let r=0;r<3;r++) for(let row=0;row<3;row++)
+            document.getElementById(`reel-${r}-${row}`).textContent=d.reels[r][row];
+        bal=d.balance; updateBalance(bal);
+        const ra=document.getElementById('result-area');
+        if(d.is_win) ra.innerHTML=`<div class="win-animation"><p class="text-2xl font-black text-emerald-400">🎉 +${Math.floor(d.payout)}₽ (x${d.multiplier})</p></div>`;
+        else ra.innerHTML=`<p class="text-xl font-bold text-red-400">😢 -${Math.floor(bet)}₽</p>`;
+    }
+    spinning=false;
+    document.getElementById('spin-btn').textContent='🎰 КРУТИТЬ';
+}
+</script>
+{% endblock %}

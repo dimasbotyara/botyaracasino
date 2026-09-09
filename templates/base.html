@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Neon Casino{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #0a0a0f;
+            min-height: 100vh;
+        }
+
+        .neon-border {
+            border: 1px solid rgba(139,92,246,0.3);
+            box-shadow: 0 0 15px rgba(139,92,246,0.1), inset 0 0 15px rgba(139,92,246,0.05);
+        }
+
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(139,92,246,0.4), 0 0 40px rgba(139,92,246,0.1);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(139,92,246,0.8), 0 0 20px rgba(139,92,246,0.4);
+        }
+
+        .green-glow {
+            box-shadow: 0 0 20px rgba(16,185,129,0.4);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+            .card-hover:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 0 30px rgba(139,92,246,0.3);
+            }
+
+        .glass {
+            background: rgba(15,15,25,0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-neon {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            transition: all 0.3s ease;
+        }
+
+            .btn-neon:hover {
+                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                box-shadow: 0 0 25px rgba(139,92,246,0.5);
+                transform: scale(1.02);
+            }
+
+        .btn-green {
+            background: linear-gradient(135deg, #059669, #047857);
+            transition: all 0.3s;
+        }
+
+            .btn-green:hover {
+                background: linear-gradient(135deg, #10b981, #059669);
+                box-shadow: 0 0 25px rgba(16,185,129,0.5);
+            }
+
+        .btn-red {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transition: all 0.3s;
+        }
+
+            .btn-red:hover {
+                background: linear-gradient(135deg, #ef4444, #dc2626);
+            }
+
+        .bg-pattern {
+            background-image: radial-gradient(circle at 20% 50%, rgba(139,92,246,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(16,185,129,0.05) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(245,158,11,0.03) 0%, transparent 50%);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-up {
+            animation: slideUp 0.5s ease forwards;
+        }
+
+        .flash-message {
+            animation: slideUp 0.3s ease, fadeOut 0.5s ease 2.5s forwards;
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+        }
+
+        .win-animation {
+            animation: winPulse 0.5s ease;
+        }
+
+        @keyframes winPulse {
+            0%,100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.08);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #7c3aed;
+            border-radius: 4px;
+        }
+
+        .dev-badge {
+            background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(16,185,129,0.1));
+            border: 1px solid rgba(139,92,246,0.2);
+        }
+    </style>
+</head>
+<body class="bg-pattern text-white">
+
+    <!-- Глобал��ная переменная баланса -->
+    <script>window.bal = 0; window.currentBalance = 0;</script>
+
+    {% if session.get('user_id') %}
+    <nav class="glass border-b border-violet-500/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <a href="/dashboard" class="flex items-center gap-2">
+                <span class="text-3xl">🎰</span>
+                <span class="text-xl font-bold bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
+                    NEON CASINO
+                </span>
+            </a>
+
+            <div class="flex items-center gap-4">
+                <a href="/leaderboard" class="text-gray-400 hover:text-violet-400 transition text-sm font-medium">🏆 Лидеры</a>
+                <a href="/profile" class="text-gray-400 hover:text-violet-400 transition text-sm font-medium">👤 Профиль</a>
+
+                <div class="neon-border rounded-xl px-4 py-2 flex items-center gap-3">
+                    <span class="text-gray-400 text-sm" id="nav-username">{{ session.get('username','') }}</span>
+                    <div class="h-4 w-px bg-violet-500/30"></div>
+                    <span class="text-emerald-400 font-bold text-sm" id="nav-balance">
+                        {{ "%.0f"|format(user.balance if user else 0) }}₽
+                    </span>
+                </div>
+
+                <button onclick="openDepositModal()" class="btn-green text-white px-4 py-2 rounded-xl text-sm font-bold">
+                    💰 Пополнить
+                </button>
+                <a href="/logout" class="text-gray-500 hover:text-red-400 transition text-sm">Выход</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="fixed top-20 right-4 z-50 space-y-2">
+        {% for cat, msg in messages %}
+        <div class="flash-message px-5 py-3 rounded-xl text-sm font-medium
+        {% if cat == 'error' %}bg-red-500/20 border border-red-500/40 text-red-300
+        {% elif cat == 'success' %}bg-emerald-500/20 border border-emerald-500/40 text-emerald-300
+        {% else %}bg-violet-500/20 border border-violet-500/40 text-violet-300{% endif %}">
+            {{ msg }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-violet-500/10 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <div class="dev-badge inline-flex items-center gap-2 px-4 py-2 rounded-xl mb-2">
+                <span class="text-sm">🛠️</span>
+                <span class="text-sm text-gray-400">Разработано</span>
+                <span class="text-sm font-bold bg-gradient-to-r from-violet-400 to-emerald-400 bg-clip-text text-transparent">
+                    {{ dev | default('dimasbotyara') }}
+                </span>
+            </div>
+            <p class="text-gray-600 text-xs mt-1">Neon Casino © 2025 • Только для развлечения</p>
+        </div>
+    </footer>
+
+    <!-- Deposit Modal -->
+    <div id="deposit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="glass neon-border rounded-2xl p-8 w-full max-w-md slide-up">
+            <h3 class="text-xl font-bold mb-2 neon-text">💰 Пополнение</h3>
+            <p class="text-gray-400 text-sm mb-6">Лимит: 150 000₽ за раз</p>
+            <div class="space-y-4">
+                <input type="number" id="deposit-amount" min="1" max="150000" placeholder="Сумма"
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500">
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setDep(1000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">1K</button>
+                    <button onclick="setDep(5000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">5K</button>
+                    <button onclick="setDep(25000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">25K</button>
+                    <button onclick="setDep(150000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">MAX</button>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="submitDeposit()" class="btn-green flex-1 text-white py-3 rounded-xl font-bold">Пополнить</button>
+                    <button onclick="closeDepositModal()" class="bg-gray-800 flex-1 text-gray-300 py-3 rounded-xl font-medium hover:bg-gray-700">Отмена</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if session.get('user_id') %}
+    <!-- Chat Panel -->
+    <div id="chat-panel" class="fixed bottom-4 right-4 z-40 w-80 hidden">
+        <div class="glass neon-border rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/10">
+            <div class="bg-violet-500/10 px-4 py-3 flex items-center justify-between border-b border-violet-500/20 cursor-pointer" onclick="toggleChat()">
+                <span class="font-bold text-sm">💬 Чат</span>
+                <div class="flex items-center gap-2">
+                    <span id="chat-unread" class="hidden bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+                    <span class="text-gray-400 text-xs">▼</span>
+                </div>
+            </div>
+            <div id="chat-messages" class="h-64 overflow-y-auto px-3 py-2 space-y-1 text-sm" style="scrollbar-width: thin;">
+                <p class="text-gray-500 text-xs text-center">Загрузка...</p>
+            </div>
+            <div class="px-3 py-2 border-t border-violet-500/20 flex gap-2">
+                <input type="text" id="chat-input" placeholder="Сообщение..."
+                       maxlength="500"
+                       onkeypress="if(event.key==='Enter')sendChatMsg()"
+                       class="flex-1 bg-black/40 border border-violet-500/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500 placeholder-gray-600">
+                <button onclick="sendChatMsg()" class="bg-violet-600 hover:bg-violet-500 text-white px-3 py-2 rounded-lg text-sm transition">➤</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button id="chat-toggle" onclick="toggleChat()"
+            class="fixed bottom-4 right-4 z-40 bg-violet-600 hover:bg-violet-500 text-white w-14 h-14 rounded-full shadow-lg shadow-violet-500/30 text-2xl transition hover:scale-110 flex items-center justify-center">
+        💬
+        <span id="chat-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
+    </button>
+    {% endif %}
+
+    <script>
+    // ═══════════════════════════════════════
+    //         ОСНОВНЫЕ ФУНКЦИИ
+    // ═══════════════════════════════════════
+
+    function openDepositModal(){
+        document.getElementById('deposit-modal').classList.remove('hidden');
+    }
+
+    function closeDepositModal(){
+        document.getElementById('deposit-modal').classList.add('hidden');
+    }
+
+    function setDep(v){
+        document.getElementById('deposit-amount').value = v;
+    }
+
+    async function submitDeposit(){
+        const amount = parseFloat(document.getElementById('deposit-amount').value);
+        if(!amount || amount <= 0) return alert('Введите сумму');
+
+        const r = await fetch('/api/deposit', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({amount})
+        });
+        const d = await r.json();
+
+        if(d.success){
+            updateBalance(d.balance);
+            closeDepositModal();
+            showToast(d.message, 'success');
+            document.getElementById('deposit-amount').value = '';
+        } else {
+            showToast(d.message, 'error');
+        }
+    }
+
+    function updateBalance(b){
+        // Обновляем отображение
+        const e1 = document.getElementById('nav-balance');
+        const e2 = document.getElementById('game-balance');
+        if(e1) e1.textContent = Math.floor(b) + '₽';
+        if(e2) e2.textContent = Math.floor(b) + '₽';
+
+        // Обновляем глобальные переменные
+        bal = b;
+        window.currentBalance = b;
+        window.bal = b;
+    }
+
+    function showToast(msg, type='info'){
+        const el = document.createElement('div');
+        el.className = `fixed top-20 right-4 z-50 flash-message px-5 py-3 rounded-xl text-sm font-medium
+            ${type === 'error' ? 'bg-red-500/20 border border-red-500/40 text-red-300' :
+              type === 'success' ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-300' :
+              'bg-violet-500/20 border border-violet-500/40 text-violet-300'}`;
+        el.textContent = msg;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    // Авто-обновление баланса каждые 5 сек
+    setInterval(async () => {
+        try {
+            const r = await fetch('/api/balance');
+            const d = await r.json();
+            updateBalance(d.balance);
+        } catch(e) {}
+    }, 5000);
+
+    // ═══════════════════════════════════════
+    //              ЧАТ
+    // ═══════════════════════════════════════
+
+    var chatOpen = false;
+    var lastChatId = 0;
+    var unreadCount = 0;
+
+    function toggleChat() {
+        chatOpen = !chatOpen;
+        const panel = document.getElementById('chat-panel');
+        const toggle = document.getElementById('chat-toggle');
+
+        if (panel) panel.classList.toggle('hidden', !chatOpen);
+        if (toggle) toggle.classList.toggle('hidden', chatOpen);
+
+        if (chatOpen) {
+            unreadCount = 0;
+            const badge = document.getElementById('chat-badge');
+            const unread = document.getElementById('chat-unread');
+            if (badge) badge.classList.add('hidden');
+            if (unread) unread.classList.add('hidden');
+
+            const msgs = document.getElementById('chat-messages');
+            if (msgs) msgs.scrollTop = msgs.scrollHeight;
+
+            const input = document.getElementById('chat-input');
+            if (input) input.focus();
+        }
+    }
+
+    async function sendChatMsg() {
+        const input = document.getElementById('chat-input');
+        if (!input) return;
+
+        const msg = input.value.trim();
+        if (!msg) return;
+
+        input.value = '';
+
+        try {
+            await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            });
+            loadChat();
+        } catch(e) {}
+    }
+
+    async function loadChat() {
+        try {
+            const r = await fetch('/api/chat/messages?after=' + lastChatId);
+            const messages = await r.json();
+            if (!messages || !messages.length) return;
+
+            const container = document.getElementById('chat-messages');
+            if (!container) return;
+
+            const wasAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 50;
+
+            // Очищаем "загрузка" при первой загрузке
+            if (lastChatId === 0) container.innerHTML = '';
+
+            var newMsgs = 0;
+            const currentUser = '{{ session.get("username", "") }}';
+
+            messages.forEach(function(m) {
+                if (m.id <= lastChatId) return;
+                lastChatId = m.id;
+                newMsgs++;
+
+                const div = document.createElement('div');
+                const time = m.created_at ? m.created_at.substring(11, 16) : '';
+
+                if (m.msg_type === 'system') {
+                    div.className = 'text-center py-1';
+                    div.innerHTML = '<span class="text-xs bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full">' + escapeHtml(m.message) + '</span>';
+                } else {
+                    const isMe = m.username === currentUser;
+                    div.className = 'py-0.5';
+                    div.innerHTML =
+                        '<span class="text-gray-500 text-xs">' + time + '</span> ' +
+                        '<span class="font-bold text-xs ' + (isMe ? 'text-violet-400' : 'text-emerald-400') + '">' + escapeHtml(m.username) + ':</span> ' +
+                        '<span class="text-gray-300 text-xs">' + escapeHtml(m.message) + '</span>';
+                }
+                container.appendChild(div);
+            });
+
+            if (wasAtBottom || newMsgs > 0) {
+                container.scrollTop = container.scrollHeight;
+            }
+
+            // Показываем badge если чат закрыт
+            if (!chatOpen && newMsgs > 0) {
+                unreadCount += newMsgs;
+                const badge = document.getElementById('chat-badge');
+                if (badge) {
+                    badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
+                    badge.classList.remove('hidden');
+                }
+            }
+        } catch(e) {}
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Загружаем чат сразу и потом каждые 3 сек
+    {% if session.get('user_id') %}
+    loadChat();
+    setInterval(loadChat, 3000);
+    {% endif %}
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

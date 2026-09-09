@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Вход — Neon Casino{% endblock %}
+{% block content %}
+<div class="min-h-[80vh] flex items-center justify-center">
+    <div class="glass neon-border rounded-3xl p-10 w-full max-w-md slide-up">
+        <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🎰</div>
+            <h1 class="text-3xl font-black bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">NEON CASINO</h1>
+            <p class="text-gray-500 mt-2 text-sm">Войдите в аккаунт</p>
+        </div>
+        <form method="POST" class="space-y-5">
+            <div>
+                <label class="text-sm text-gray-400 mb-1 block">Никнейм</label>
+                <input type="text" name="username" required autofocus
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 placeholder-gray-600" placeholder="Ваш ник">
+            </div>
+            <div>
+                <label class="text-sm text-gray-400 mb-1 block">Пароль</label>
+                <input type="password" name="password" required
+                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500 placeholder-gray-600" placeholder="Пароль">
+            </div>
+            <button type="submit" class="btn-neon w-full py-3 rounded-xl text-white font-bold text-lg">Войти</button>
+        </form>
+        <p class="text-center text-gray-500 mt-6 text-sm">
+            Нет аккаунта? <a href="/register" class="text-violet-400 hover:text-violet-300 font-medium">Зарегистрироваться</a>
+        </p>
+        <div class="text-center mt-4">
+            <span class="text-xs text-gray-600">by {{ dev }}</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

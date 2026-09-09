@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}📜 Логи — Админка{% endblock %}
+{% block content %}
+<div class="slide-up max-w-5xl mx-auto">
+    <div class="flex items-center gap-3 mb-8">
+        <a href="/admin" class="text-gray-400 hover:text-violet-400 transition">← Админка</a>
+        <h1 class="text-3xl font-black">📜 Логи админ-действий</h1>
+    </div>
+
+    <div class="glass neon-border rounded-2xl p-6">
+        {% if logs %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-gray-400 border-b border-gray-700">
+                        <th class="text-left py-2 px-2">Время</th>
+                        <th class="text-left py-2 px-2">Админ</th>
+                        <th class="text-left py-2 px-2">Действие</th>
+                        <th class="text-left py-2 px-2">Цель</th>
+                        <th class="text-left py-2 px-2">Детали</th>
+                        <th class="text-left py-2 px-2">IP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in logs %}
+                    <tr class="border-b border-gray-800/50 hover:bg-violet-500/5">
+                        <td class="py-2 px-2 text-gray-400 text-xs whitespace-nowrap">{{ l.created_at[5:19] }}</td>
+                        <td class="py-2 px-2 font-bold text-violet-400">{{ l.admin_username }}</td>
+                        <td class="py-2 px-2">
+                            {% set action_colors = {
+                            'set_balance': 'text-amber-400',
+                            'add_balance': 'text-emerald-400',
+                            'ban': 'text-red-400',
+                            'unban': 'text-emerald-400',
+                            'kick': 'text-amber-400',
+                            'delete_user': 'text-red-400',
+                            'grant_admin': 'text-amber-400',
+                            'revoke_admin': 'text-gray-400',
+                            'reset_stats': 'text-violet-400',
+                            'broadcast': 'text-cyan-400',
+                            'update_settings': 'text-blue-400',
+                            'export_db': 'text-gray-400'
+                            } %}
+                            <span class="{{ action_colors.get(l.action, 'text-white') }} font-bold">{{ l.action }}</span>
+                        </td>
+                        <td class="py-2 px-2 text-white">{{ l.target_username }}</td>
+                        <td class="py-2 px-2 text-gray-400 text-xs max-w-[300px] truncate">{{ l.details }}</td>
+                        <td class="py-2 px-2 text-gray-500 text-xs">{{ l.ip }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">Логов пока нет</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}💣 Мины{% endblock %}
+{% block content %}
+<div class="slide-up max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
+        <h1 class="text-3xl font-black">💣 Минное поле</h1>
+    </div>
+    <div class="glass neon-border rounded-3xl p-8 text-center">
+        <div class="mb-4">
+            <p class="text-gray-400 text-sm mb-1">Баланс</p>
+            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+        </div>
+
+        <div class="flex justify-center gap-6 mb-4 text-sm">
+            <div>Множитель: <span id="mines-mult" class="text-violet-400 font-bold">1.00x</span></div>
+            <div>Выплата: <span id="mines-payout" class="text-emerald-400 font-bold">0₽</span></div>
+        </div>
+
+        <!-- Grid 5x5 -->
+        <div class="grid grid-cols-5 gap-2 max-w-xs mx-auto mb-6" id="mines-grid">
+            {% for i in range(25) %}
+            <button id="cell-{{i}}" onclick="openCell({{i}})"
+                    class="w-14 h-14 bg-violet-500/10 border border-violet-500/30 rounded-xl text-xl font-bold hover:bg-violet-500/20 transition disabled:opacity-50"
+                    disabled>
+                ❓
+            </button>
+            {% endfor %}
+        </div>
+
+        <div id="result-area" class="mb-4 h-14 flex items-center justify-center"></div>
+
+        <!-- Setup -->
+        <div id="setup-phase">
+            <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-4">
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">Ставка</label>
+                    <input type="number" id="bet-amount" min="1" value="100" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-violet-500">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-400 block mb-1">Кол-во мин</label>
+                    <select id="mine-count" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-violet-500">
+                        {% for m in [1,3,5,7,10,15,20,24] %}
+                        <option value="{{m}}" {% if m= =3 %}selected{% endif %}>{{m}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button onclick="startMines()" class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">💣 НАЧАТЬ</button>
+        </div>
+
+        <div id="cashout-phase" class="hidden">
+            <button onclick="cashoutMines()" class="btn-green text-white px-12 py-4 rounded-2xl text-xl font-black green-glow">💰 ЗАБРАТЬ</button>
+        </div>
+
+        <div id="newgame-phase" class="hidden">
+            <button onclick="resetMines()" class="btn-neon text-white px-8 py-3 rounded-xl font-bold">🔄 Новая игра</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+bal={{user.balance}}, active=false, bet=0;
+async function startMines(){
+    bet=parseFloat(document.getElementById('bet-amount').value);
+    const mines=parseInt(document.getElementById('mine-count').value);
+    if(!bet||bet<=0) return showToast('Введите ставку','error');
+    if(bet>bal) return showToast('Недостаточно средств','error');
+
+    const r=await fetch('/api/game/mines/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bet,mines})});
+    const d=await r.json();
+    if(d.success){
+        active=true;
+        for(let i=0;i<25;i++){const c=document.getElementById('cell-'+i);c.disabled=false;c.textContent='❓';c.className='w-14 h-14 bg-violet-500/10 border border-violet-500/30 rounded-xl text-xl font-bold hover:bg-violet-500/20 transition';}
+        document.getElementById('setup-phase').classList.add('hidden');
+        document.getElementById('cashout-phase').classList.remove('hidden');
+        document.getElementById('mines-mult').textContent='1.00x';
+        document.getElementById('mines-payout').textContent=bet+'₽';
+        document.getElementById('result-area').innerHTML='<p class="text-gray-500">Открывай клетки!</p>';
+    }
+}
+
+async function openCell(i){
+    if(!active) return;
+    const r=await fetch('/api/game/mines/open',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cell:i})});
+    const d=await r.json();
+    if(!d.success) return;
+    const c=document.getElementById('cell-'+i);
+    if(d.mine){
+        active=false;
+        c.textContent='💣';c.className='w-14 h-14 bg-red-500/30 border border-red-500 rounded-xl text-xl font-bold';
+        d.mines.forEach(m=>{document.getElementById('cell-'+m).textContent='💣';document.getElementById('cell-'+m).className='w-14 h-14 bg-red-500/20 border border-red-500/50 rounded-xl text-xl';});
+        for(let j=0;j<25;j++) document.getElementById('cell-'+j).disabled=true;
+        bal=d.balance; updateBalance(bal);
+        document.getElementById('result-area').innerHTML=`<p class="text-xl font-bold text-red-400">💥 БУМ! -${Math.floor(bet)}₽</p>`;
+        document.getElementById('cashout-phase').classList.add('hidden');
+        document.getElementById('newgame-phase').classList.remove('hidden');
+    } else {
+        c.textContent='💎';c.className='w-14 h-14 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-xl font-bold';c.disabled=true;
+        document.getElementById('mines-mult').textContent=d.multiplier.toFixed(2)+'x';
+        document.getElementById('mines-payout').textContent=Math.floor(d.current_payout)+'₽';
+    }
+}
+
+async function cashoutMines(){
+    const r=await fetch('/api/game/mines/cashout',{method:'POST',headers:{'Content-Type':'application/json'}});
+    const d=await r.json();
+    if(d.success){
+        active=false;
+        d.mines.forEach(m=>{document.getElementById('cell-'+m).textContent='💣';document.getElementById('cell-'+m).className='w-14 h-14 bg-gray-500/20 border border-gray-500/50 rounded-xl text-xl';});
+        for(let i=0;i<25;i++) document.getElementById('cell-'+i).disabled=true;
+        bal=d.balance; updateBalance(bal);
+        document.getElementById('result-area').innerHTML=`<div class="win-animation"><p class="text-2xl font-black text-emerald-400">💰 +${Math.floor(d.profit)}₽ (x${d.multiplier})</p></div>`;
+        document.getElementById('cashout-phase').classList.add('hidden');
+        document.getElementById('newgame-phase').classList.remove('hidden');
+    }
+}
+
+function resetMines(){
+    for(let i=0;i<25;i++){const c=document.getElementById('cell-'+i);c.disabled=true;c.textContent='❓';c.className='w-14 h-14 bg-violet-500/10 border border-violet-500/30 rounded-xl text-xl font-bold disabled:opacity-50';}
+    document.getElementById('newgame-phase').classList.add('hidden');
+    document.getElementById('setup-phase').classList.remove('hidden');
+    document.getElementById('result-area').innerHTML='';
+    document.getElementById('mines-mult').textContent='1.00x';
+    document.getElementById('mines-payout').textContent='0₽';
+}
+</script>
+{% endblock %}

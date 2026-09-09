@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+{% block title %}Профиль — {{ user.username }}{% endblock %}
+{% block content %}
+<div class="slide-up max-w-5xl mx-auto">
+    <div class="flex items-center gap-3 mb-8">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
+        <h1 class="text-3xl font-black">👤 Профиль</h1>
+    </div>
+
+    <!-- Main Stats Card -->
+    <div class="glass neon-border rounded-2xl p-8 mb-8">
+        <div class="flex items-center gap-6 mb-6">
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-4xl font-black">
+                {{ user.username[0]|upper }}
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold">{{ user.username }}</h2>
+                <p class="text-gray-400 text-sm">С нами с {{ user.created_at[:10] }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-black/30 rounded-xl p-4 text-center">
+                <p class="text-gray-400 text-xs mb-1">Баланс</p>
+                <p class="text-2xl font-black text-emerald-400">{{ "%.0f"|format(user.balance) }}₽</p>
+            </div>
+            <div class="bg-black/30 rounded-xl p-4 text-center">
+                <p class="text-gray-400 text-xs mb-1">Профит</p>
+                <p class="text-2xl font-black {% if user.profit >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {{ "%+.0f"|format(user.profit) }}₽
+                </p>
+            </div>
+            <div class="bg-black/30 rounded-xl p-4 text-center">
+                <p class="text-gray-400 text-xs mb-1">Winrate</p>
+                <p class="text-2xl font-black text-violet-400">{{ "%.1f"|format(user.winrate) }}%</p>
+            </div>
+            <div class="bg-black/30 rounded-xl p-4 text-center">
+                <p class="text-gray-400 text-xs mb-1">ROI</p>
+                <p class="text-2xl font-black {% if user.roi >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {{ "%+.1f"|format(user.roi) }}%
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Chart -->
+    {% if user.balance_history|length > 1 %}
+    <div class="glass neon-border rounded-2xl p-6 mb-8">
+        <h3 class="text-lg font-bold mb-4">📈 График баланса</h3>
+        <canvas id="balanceChart" height="120"></canvas>
+    </div>
+    {% endif %}
+
+    <!-- Detailed Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="glass neon-border rounded-2xl p-6">
+            <h3 class="text-lg font-bold mb-4">📊 Статистика</h3>
+            <div class="space-y-3 text-sm">
+                {% set stats = [
+                ('Всего игр', user.games_played, ''),
+                ('Побед', user.games_won, 'text-emerald-400'),
+                ('Поражений', user.loss_count, 'text-red-400'),
+                ('Поставлено', "%.0f₽"|format(user.total_wagered), ''),
+                ('Выиграно', "%.0f₽"|format(user.total_won), 'text-emerald-400'),
+                ('Проиграно', "%.0f₽"|format(user.total_lost|default(0)), 'text-red-400'),
+                ('Депозитов', "%.0f₽"|format(user.total_deposited), 'text-amber-400'),
+                ('Пик баланса', "%.0f₽"|format(user.peak_balance), 'text-violet-400')
+                ] %}
+                {% for label, val, cls in stats %}
+                <div class="flex justify-between">
+                    <span class="text-gray-400">{{ label }}</span>
+                    <span class="font-bold {{ cls }}">{{ val }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="glass neon-border rounded-2xl p-6">
+            <h3 class="text-lg font-bold mb-4">🏆 Рекорды</h3>
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between"><span class="text-gray-400">Лучший выигрыш</span><span class="font-bold text-emerald-400">{{ "%.0f"|format(user.biggest_win) }}₽</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">Худший проигрыш</span><span class="font-bold text-red-400">{{ "%.0f"|format(user.biggest_loss) }}₽</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">Лучший стрик</span><span class="font-bold text-amber-400">{{ user.best_streak }}🔥</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">Худший стрик</span><span class="font-bold text-red-400">{{ user.worst_streak|default(0) }}💀</span></div>
+                <div class="flex justify-between">
+                    <span class="text-gray-400">Текущий стрик</span>
+                    <span class="font-bold {% if user.current_streak > 0 %}text-emerald-400{% elif user.current_streak < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+                        {{ user.current_streak }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Per-Game -->
+    {% if user.game_stats %}
+    <div class="glass neon-border rounded-2xl p-6 mb-8">
+        <h3 class="text-lg font-bold mb-4">🎮 По играм</h3>
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {% for g in user.game_stats %}
+            <div class="bg-black/30 rounded-xl p-3 text-center">
+                <p class="font-bold text-sm mb-1">{{ g.game_type }}</p>
+                <p class="text-xs text-gray-400">{{ g.wins }}/{{ g.total }} побед</p>
+                <p class="text-sm font-bold mt-1 {% if g.total_profit >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                    {{ "%+.0f"|format(g.total_profit) }}₽
+                </p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Achievements -->
+    <div class="glass neon-border rounded-2xl p-6 mb-8">
+        <h3 class="text-lg font-bold mb-4">🏅 Достижения ({{ achievements|selectattr('unlocked')|list|length }}/{{ achievements|length }})</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {% for a in achievements %}
+            <div class="rounded-xl p-3 text-center transition
+                {% if a.unlocked %}bg-violet-500/10 border border-violet-500/30{% else %}bg-black/20 border border-gray-800 opacity-40{% endif %}">
+                <div class="text-2xl mb-1">{{ a.icon }}</div>
+                <p class="font-bold text-xs">{{ a.name }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ a.desc }}</p>
+                {% if a.unlocked %}
+                <p class="text-xs text-emerald-400 mt-1">✅ Получено</p>
+                {% else %}
+                <p class="text-xs text-gray-600 mt-1">🔒 Закрыто</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- History -->
+    <div class="glass neon-border rounded-2xl p-6">
+        <h3 class="text-lg font-bold mb-4">📜 Последние игры</h3>
+        {% if history %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-gray-400 border-b border-gray-700">
+                        <th class="text-left py-2 px-2">Игра</th>
+                        <th class="text-right py-2 px-2">Ставка</th>
+                        <th class="text-center py-2 px-2">Итог</th>
+                        <th class="text-right py-2 px-2">Профит</th>
+                        <th class="text-left py-2 px-2">Детали</th>
+                        <th class="text-right py-2 px-2">Время</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in history %}
+                    <tr class="border-b border-gray-800/50 hover:bg-violet-500/5">
+                        <td class="py-2 px-2">{{ h.game_type }}</td>
+                        <td class="py-2 px-2 text-right">{{ "%.0f"|format(h.bet_amount) }}₽</td>
+                        <td class="py-2 px-2 text-center">
+                            {% if h.result == 'win' %}<span class="text-emerald-400 font-bold">WIN</span>
+                            {% else %}<span class="text-red-400">LOSS</span>{% endif %}
+                        </td>
+                        <td class="py-2 px-2 text-right font-bold {% if h.profit >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">
+                            {{ "%+.0f"|format(h.profit) }}₽
+                        </td>
+                        <td class="py-2 px-2 text-gray-400 text-xs max-w-[200px] truncate">{{ h.details }}</td>
+                        <td class="py-2 px-2 text-right text-gray-500 text-xs">{{ h.played_at[11:16] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-6">Пока нет игр 🎮</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if user.balance_history|length > 1 %}
+<script>
+    const data = {{ user.balance_history | tojson }};
+    const canvas = document.getElementById('balanceChart');
+    const ctx = canvas.getContext('2d');
+
+    function drawChart() {
+        const W = canvas.width = canvas.offsetWidth * 2;
+        const H = canvas.height = 240;
+        ctx.clearRect(0,0,W,H);
+
+        const pad = 40;
+        const maxVal = Math.max(...data, 1);
+        const minVal = Math.min(...data, 0);
+        const range = maxVal - minVal || 1;
+
+        const stepX = (W - pad*2) / (data.length - 1);
+
+        // Grid
+        ctx.strokeStyle = 'rgba(139,92,246,0.1)';
+        ctx.lineWidth = 1;
+        for(let i=0; i<5; i++){
+            const y = pad + (H-pad*2) * i/4;
+            ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke();
+        }
+
+        // Gradient fill
+        const grad = ctx.createLinearGradient(0, pad, 0, H-pad);
+        grad.addColorStop(0, 'rgba(16,185,129,0.3)');
+        grad.addColorStop(1, 'rgba(16,185,129,0)');
+
+        ctx.beginPath();
+        ctx.moveTo(pad, H-pad);
+        data.forEach((v,i) => {
+            const x = pad + i*stepX;
+            const y = H - pad - ((v-minVal)/range) * (H-pad*2);
+            ctx.lineTo(x, y);
+        });
+        ctx.lineTo(pad + (data.length-1)*stepX, H-pad);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Line
+        ctx.beginPath();
+        data.forEach((v,i) => {
+            const x = pad + i*stepX;
+            const y = H - pad - ((v-minVal)/range) * (H-pad*2);
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        });
+        ctx.strokeStyle = '#10b981';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Last point
+        const lastX = pad + (data.length-1)*stepX;
+        const lastY = H - pad - ((data[data.length-1]-minVal)/range) * (H-pad*2);
+        ctx.beginPath();
+        ctx.arc(lastX, lastY, 5, 0, Math.PI*2);
+        ctx.fillStyle = '#10b981';
+        ctx.fill();
+
+        // Labels
+        ctx.fillStyle = '#666';
+        ctx.font = '20px Inter';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.floor(maxVal)+'₽', pad-8, pad+6);
+        ctx.fillText(Math.floor(minVal)+'₽', pad-8, H-pad+6);
+    }
+    drawChart();
+</script>
+{% endif %}
+{% endblock %}

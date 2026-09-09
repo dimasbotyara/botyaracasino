@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}⚽ Пенальти{% endblock %}
+{% block content %}
+<div class="slide-up max-w-2xl mx-auto">
+    <div class="flex items-center gap-3 mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
+        <h1 class="text-3xl font-black">⚽ Пенальти</h1>
+    </div>
+    <div class="glass neon-border rounded-3xl p-8 text-center">
+        <div class="mb-6">
+            <p class="text-gray-400 text-sm mb-1">Баланс</p>
+            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+        </div>
+
+        <p class="text-gray-400 text-sm mb-4">Выбери куда бить! Углы: x3 | Стороны: x2.5 | Центр: x2</p>
+
+        <!-- Goal Grid 3x3 -->
+        <div class="max-w-xs mx-auto mb-6">
+            <div class="bg-gradient-to-b from-emerald-900/40 to-emerald-800/20 border-2 border-emerald-500/30 rounded-2xl p-2">
+                <div class="grid grid-cols-3 gap-2" id="goal-grid">
+                    {% set positions = ['↖️','⬆️','↗️','⬅️','⏺️','➡️','↙️','⬇️','↘️'] %}
+                    {% set mults = ['x3','x2.5','x3','x2.5','x2','x2.5','x3','x2.5','x3'] %}
+                    {% for i in range(9) %}
+                    <button id="pos-{{ i }}" onclick="kick({{ i }})"
+                            class="h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-2xl
+                        hover:bg-emerald-500/30 hover:scale-105 transition-all flex flex-col items-center justify-center">
+                        <span>{{ positions[i] }}</span>
+                        <span class="text-xs text-gray-400">{{ mults[i] }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="text-center mt-2 text-3xl">🧤</div>
+        </div>
+
+        <div id="result-area" class="mb-6 h-14 flex items-center justify-center">
+            <p class="text-gray-500">Куда бьём?</p>
+        </div>
+
+        <div class="mb-4">
+            <input type="number" id="bet-amount" min="1" value="100"
+                   class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-lg font-bold focus:outline-none focus:border-violet-500">
+        </div>
+        <div class="flex justify-center gap-2 mb-4">
+            {% for v in [50,100,500,1000,5000] %}
+            <button onclick="document.getElementById('bet-amount').value={{v}}"
+                    class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">
+                {{ v if v<1000 else '%dK'|format(v//1000) }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <div class="mt-4 flex gap-2 flex-wrap justify-center" id="penalty-history"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+bal={{ user.balance }}, kicking=false, history=[];
+const posIcons = ['↖️','⬆️','↗️','⬅️','⏺️','➡️','↙️','⬇️','↘️'];
+
+async function kick(pos) {
+    if (kicking) return;
+    const bet = parseFloat(document.getElementById('bet-amount').value);
+    if (!bet || bet <= 0) return showToast('Введите ставку', 'error');
+    if (bet > bal) return showToast('Недостаточно средств', 'error');
+
+    kicking = true;
+
+    // Reset grid
+    for (let i = 0; i < 9; i++) {
+        const btn = document.getElementById('pos-' + i);
+        btn.className = 'h-20 bg-violet-500/10 border border-violet-500/20 rounded-xl text-2xl transition-all flex flex-col items-center justify-center';
+    }
+
+    const r = await fetch('/api/game/penalty', {
+        method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({bet, kick: pos})
+    });
+    const d = await r.json();
+
+    await new Promise(r => setTimeout(r, 500));
+
+    if (d.success) {
+        // Показываем мяч
+        document.getElementById('pos-' + pos).innerHTML =
+            `<span class="text-3xl">⚽</span>`;
+
+        // Показываем вратаря
+        for (const kp of d.keeper_positions) {
+            const btn = document.getElementById('pos-' + kp);
+            if (kp === pos) {
+                // Вратарь поймал
+                btn.innerHTML = '<span class="text-3xl">🧤</span>';
+            } else {
+                btn.innerHTML = `<span class="text-2xl">🧤</span><span class="text-xs text-gray-400">${posIcons[kp]}</span>`;
+                btn.className = 'h-20 bg-amber-500/10 border border-amber-500/30 rounded-xl text-2xl transition-all flex flex-col items-center justify-center';
+            }
+        }
+
+        if (d.is_goal) {
+            document.getElementById('pos-' + pos).className =
+                'h-20 bg-emerald-500/30 border-2 border-emerald-500 rounded-xl text-2xl transition-all flex flex-col items-center justify-center win-animation';
+            document.getElementById('result-area').innerHTML =
+                `<div class="win-animation"><p class="text-2xl font-black text-emerald-400">⚽ ГОЛ! +${Math.floor(d.profit)}₽ (x${d.multiplier})</p></div>`;
+            history.unshift('<span class="bg-emerald-500/20 text-emerald-400 rounded-lg px-2 py-1 text-xs">⚽ ГОЛ</span>');
+        } else {
+            document.getElementById('pos-' + pos).className =
+                'h-20 bg-red-500/30 border-2 border-red-500 rounded-xl text-2xl transition-all flex flex-col items-center justify-center';
+            document.getElementById('result-area').innerHTML =
+                `<p class="text-xl font-bold text-red-400">🧤 Поймал! -${Math.floor(bet)}₽</p>`;
+            history.unshift('<span class="bg-red-500/20 text-red-400 rounded-lg px-2 py-1 text-xs">🧤 МИМО</span>');
+        }
+
+        bal = d.balance;
+        updateBalance(bal);
+        if (history.length > 15) history.pop();
+        document.getElementById('penalty-history').innerHTML = history.join('');
+    }
+
+    setTimeout(() => {
+        // Restore grid
+        for (let i = 0; i < 9; i++) {
+            const mults = ['x3','x2.5','x3','x2.5','x2','x2.5','x3','x2.5','x3'];
+            const btn = document.getElementById('pos-' + i);
+            btn.innerHTML = `<span>${posIcons[i]}</span><span class="text-xs text-gray-400">${mults[i]}</span>`;
+            btn.className = 'h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-2xl hover:bg-emerald-500/30 hover:scale-105 transition-all flex flex-col items-center justify-center';
+        }
+        kicking = false;
+    }, 2000);
+}
+</script>
+{% endblock %}
