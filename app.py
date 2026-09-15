@@ -529,30 +529,6 @@ def api_game_coinflip():
     log_game_result(get_username(), 'Монетка', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'choice':choice,'result':result,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
-# 5. CRASH — минимальный edge
-@app.route('/game/crash')
-@login_required
-def game_crash():
-    console.log_game_enter(get_username(), 'crash')
-    return render_template('game_crash.html', user=current_user(), dev=DEVELOPER)
-
-@app.route('/api/game/crash', methods=['POST'])
-@login_required
-def api_game_crash():
-    err = check_game_disabled('Краш')
-    if err: return err
-    user = current_user(); data = request.get_json(); bet, err = validate_bet(user, data)
-    if err: return err
-    cashout = max(float(data.get('cashout',2.0)),1.1)
-    r = random.random()
-    # ЩЕДРЕЕ: instant-crash всего 1.5% (было 3%)
-    crash_point = 1.0 if r < 0.015 else round(min(1/(1-r*0.99),200.0),2)
-    is_win = cashout <= crash_point; mult = cashout if is_win else 0; payout = bet*mult
-    details = f"Краш:{crash_point}x Кэшаут:{cashout}x"
-    new_bal, profit, _ = record_game(session['user_id'], 'Краш', bet, is_win, payout, details)
-    log_game_result(get_username(), 'Краш', bet, is_win, profit, payout, new_bal)
-    return jsonify({'success':True,'crash_point':crash_point,'cashout':cashout,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
-
 # 6. BLACKJACK
 @app.route('/game/blackjack')
 @login_required
@@ -1200,6 +1176,81 @@ def api_chat_messages():
     after_id = int(request.args.get('after', 0))
     messages = get_chat_messages(50, after_id)
     return jsonify(messages)
+
+
+# 5. CRASH — реалтайм график
+@app.route('/game/crash')
+@login_required
+def game_crash():
+    console.log_game_enter(get_username(), 'crash')
+    return render_template('game_crash.html', user=current_user(), dev=DEVELOPER)
+
+@app.route('/api/game/crash/start', methods=['POST'])
+@login_required
+def api_game_crash_start():
+    err = check_game_disabled('Краш')
+    if err: return err
+    user = current_user()
+    data = request.get_json()
+    bet, err = validate_bet(user, data)
+    if err: return err
+    
+    # Генерируем краш-поинт (щедрый: instant-crash всего 1.5%)
+    r = random.random()
+    crash_point = 1.0 if r < 0.015 else round(min(1/(1-r*0.99), 200.0), 2)
+    
+    # Сохраняем в сессии для проверки при кэшауте
+    session['crash_bet'] = bet
+    session['crash_point'] = crash_point
+    session['crash_active'] = True
+    
+    return jsonify({
+        'success': True,
+        'crash_point': crash_point
+    })
+
+@app.route('/api/game/crash/cashout', methods=['POST'])
+@login_required
+def api_game_crash_cashout():
+    if not session.get('crash_active'):
+        return jsonify({'success': False, 'message': 'Нет активной игры'})
+    
+    data = request.get_json()
+    bet = session['crash_bet']
+    multiplier = float(data.get('multiplier', 1.0))
+    crash_point = session['crash_point']
+    
+    # Проверка: не мошенничает ли клиент
+    if multiplier > crash_point:
+        # Игрок пытался забрать после краша — это loss
+        session['crash_active'] = False
+        new_bal, profit, _ = record_game(
+            session['user_id'], 'Краш', bet, False, 0,
+            f'Краш {crash_point}x (пытался забрать {multiplier}x)'
+        )
+        log_game_result(get_username(), 'Краш', bet, False, profit, 0, new_bal)
+        return jsonify({
+            'success': False,
+            'message': 'Слишком поздно! Уже разбилось.',
+            'balance': new_bal
+        })
+    
+    # Успешный кэшаут
+    payout = round(bet * multiplier, 2)
+    session['crash_active'] = False
+    
+    new_bal, profit, _ = record_game(
+        session['user_id'], 'Краш', bet, True, payout,
+        f'Кэшаут {multiplier}x (краш {crash_point}x)'
+    )
+    log_game_result(get_username(), 'Краш', bet, True, profit, payout, new_bal)
+    
+    return jsonify({
+        'success': True,
+        'payout': payout,
+        'profit': profit,
+        'balance': new_bal
+    })
 
 
 if __name__ == '__main__':
