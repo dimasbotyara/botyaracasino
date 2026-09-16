@@ -1,43 +1,43 @@
 {% extends 'base.html' %}
 {% block title %}🎲 Кости{% endblock %}
 {% block content %}
-<div class="slide-up max-w-2xl mx-auto">
-    <div class="flex items-center gap-3 mb-6">
-        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
-        <h1 class="text-3xl font-black">🎲 Кости</h1>
+<div class="slide-up max-w-2xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition text-sm sm:text-base">← Назад</a>
+        <h1 class="text-2xl sm:text-3xl font-black">🎲 Кости</h1>
     </div>
-    <div class="glass neon-border rounded-3xl p-8 text-center mb-6">
-        <div class="mb-6">
-            <p class="text-gray-400 text-sm mb-1">Баланс</p>
-            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+    <div class="glass neon-border rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center mb-4 sm:mb-6">
+        <div class="mb-4 sm:mb-6">
+            <p class="text-gray-400 text-xs sm:text-sm mb-1">Баланс</p>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
         </div>
-        <div class="flex justify-center gap-6 mb-4">
-            <div id="die1" class="text-7xl">🎲</div>
-            <div id="die2" class="text-7xl">🎲</div>
+        <div class="flex justify-center gap-4 sm:gap-6 mb-3 sm:mb-4">
+            <div id="die1" class="text-5xl sm:text-7xl">🎲</div>
+            <div id="die2" class="text-5xl sm:text-7xl">🎲</div>
         </div>
-        <div id="dice-total" class="text-2xl font-black text-violet-400 mb-6">Сумма: ?</div>
-        <div id="result-area" class="mb-6 h-14 flex items-center justify-center"><p class="text-gray-500">Выбери тип ставки!</p></div>
-        <div class="mb-4">
-            <input type="number" id="bet-amount" min="1" value="100" class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-lg font-bold focus:outline-none focus:border-violet-500">
+        <div id="dice-total" class="text-xl sm:text-2xl font-black text-violet-400 mb-4 sm:mb-6">Сумма: ?</div>
+        <div id="result-area" class="mb-4 sm:mb-6 h-12 sm:h-14 flex items-center justify-center"><p class="text-gray-500 text-sm sm:text-base">Выбери тип ставки!</p></div>
+        <div class="mb-3 sm:mb-4">
+            <input type="number" id="bet-amount" min="1" value="100" class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-base sm:text-lg font-bold focus:outline-none focus:border-violet-500">
         </div>
-        <div class="flex justify-center gap-2 mb-6">
+        <div class="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 flex-wrap">
             {% for v in [50,100,500,1000,5000] %}
-            <button onclick="document.getElementById('bet-amount').value={{v}}" class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">{{ v if v<1000 else '%dK'|format(v//1000) }}</button>
+            <button onclick="document.getElementById('bet-amount').value={{v}}" class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 sm:px-3 py-1 text-xs sm:text-sm hover:bg-violet-500/20">{{ v if v<1000 else '%dK'|format(v//1000) }}</button>
             {% endfor %}
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 max-w-lg mx-auto">
-            <button onclick="roll('high')" class="btn-neon py-4 rounded-xl font-bold">⬆️ Больше (8+)<br><span class="text-xs opacity-70">x2.0</span></button>
-            <button onclick="roll('low')" class="btn-neon py-4 rounded-xl font-bold">⬇️ Меньше (6-)<br><span class="text-xs opacity-70">x2.0</span></button>
-            <button onclick="roll('seven')" class="bg-gradient-to-br from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 py-4 rounded-xl font-bold transition">7️⃣ Ровно 7<br><span class="text-xs opacity-70">x4.0</span></button>
-            <button onclick="roll('doubles')" class="bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 py-4 rounded-xl font-bold transition">🔁 Дубль<br><span class="text-xs opacity-70">x5.0</span></button>
-            <button onclick="document.getElementById('ep').classList.toggle('hidden')" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 py-4 rounded-xl font-bold transition col-span-2 md:col-span-1">🎯 Точное<br><span class="text-xs opacity-70">x6.0</span></button>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 max-w-lg mx-auto mb-3">
+            <button onclick="roll('high')" class="btn-neon py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base">⬆️ Больше (7+)<br><span class="text-xs opacity-70">x2.1</span></button>
+            <button onclick="roll('low')" class="btn-neon py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base">⬇️ Меньше (7-)<br><span class="text-xs opacity-70">x2.1</span></button>
+            <button onclick="roll('seven')" class="bg-gradient-to-br from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition">7️⃣ Ровно 7<br><span class="text-xs opacity-70">x5.0</span></button>
+            <button onclick="roll('doubles')" class="bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition">🔁 Дубль<br><span class="text-xs opacity-70">x6.0</span></button>
+            <button onclick="document.getElementById('ep').classList.toggle('hidden')" class="bg-gradient-to-br from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition col-span-2 md:col-span-1">🎯 Точное<br><span class="text-xs opacity-70">x8.0</span></button>
         </div>
         <div class="mt-3 hidden" id="ep">
-            <select id="exact-num" class="bg-black/40 border border-violet-500/30 rounded-xl px-4 py-2 text-white">
+            <select id="exact-num" class="bg-black/40 border border-violet-500/30 rounded-xl px-3 sm:px-4 py-2 text-white text-sm sm:text-base">
                 {% for n in range(2,13) %}
                 <option value="{{n}}">{{n}}</option>{% endfor %}
             </select>
-            <button onclick="roll('exact', parseInt(document.getElementById('exact-num').value))" class="btn-neon px-6 py-2 rounded-xl font-bold ml-2">Бросить!</button>
+            <button onclick="roll('exact', parseInt(document.getElementById('exact-num').value))" class="btn-neon px-4 sm:px-6 py-2 rounded-xl font-bold ml-2 text-sm sm:text-base">Бросить!</button>
         </div>
     </div>
 </div>

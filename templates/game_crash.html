@@ -1,79 +1,82 @@
 {% extends 'base.html' %}
 {% block title %}📈 Краш{% endblock %}
 {% block content %}
-<div class="slide-up max-w-3xl mx-auto">
-    <div class="flex items-center gap-3 mb-6">
-        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
-        <h1 class="text-3xl font-black">📈 Краш</h1>
+<div class="slide-up max-w-3xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition text-sm sm:text-base">← Назад</a>
+        <h1 class="text-2xl sm:text-3xl font-black">📈 Краш</h1>
     </div>
 
-    <div class="glass neon-border rounded-3xl p-8 text-center">
-        <div class="mb-6">
-            <p class="text-gray-400 text-sm mb-1">Баланс</p>
-            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+    <div class="glass neon-border rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center">
+        <div class="mb-4 sm:mb-6">
+            <p class="text-gray-400 text-xs sm:text-sm mb-1">Баланс</p>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
         </div>
 
         <!-- Multiplier Display -->
-        <div class="relative mb-6">
-            <div class="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-                <div id="crash-multiplier" class="text-6xl font-black neon-text transition-all" style="text-shadow: 0 0 20px rgba(139,92,246,0.8);">
+        <div class="relative mb-4 sm:mb-6">
+            <div class="absolute top-2 sm:top-4 left-1/2 -translate-x-1/2 z-10">
+                <div id="crash-multiplier" class="text-4xl sm:text-6xl font-black neon-text transition-all" style="text-shadow: 0 0 20px rgba(139,92,246,0.8);">
                     1.00x
                 </div>
-                <div id="crash-status" class="text-center text-sm text-gray-500 mt-2">
+                <div id="crash-status" class="text-center text-xs sm:text-sm text-gray-500 mt-1 sm:mt-2">
                     Сделай ставку
                 </div>
             </div>
-            <!-- Graph Canvas -->
-            <canvas id="crash-graph" width="600" height="300" class="w-full rounded-2xl bg-black/40 border border-violet-500/20"></canvas>
+            <!-- Graph Canvas — адаптивный размер -->
+            <canvas id="crash-graph"
+                    class="w-full rounded-xl sm:rounded-2xl bg-black/40 border border-violet-500/20"
+                    style="aspect-ratio: 2/1; max-height: 250px;">
+            </canvas>
         </div>
 
-        <div id="result-area" class="mb-6 h-14 flex items-center justify-center"></div>
+        <div id="result-area" class="mb-4 sm:mb-6 h-12 sm:h-14 flex items-center justify-center"></div>
 
         <!-- Betting Phase -->
         <div id="bet-phase">
-            <input type="number" id="bet-amount" min="1" value="100" 
-                   class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-lg font-bold focus:outline-none focus:border-violet-500 mb-4">
-            <div class="flex justify-center gap-2 mb-6">
+            <input type="number" id="bet-amount" min="1" value="100"
+                   class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-base sm:text-lg font-bold focus:outline-none focus:border-violet-500 mb-3 sm:mb-4">
+            <div class="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 flex-wrap">
                 {% for v in [50,100,500,1000,5000] %}
-                <button onclick="document.getElementById('bet-amount').value={{v}}" 
-                        class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">
+                <button onclick="document.getElementById('bet-amount').value={{v}}"
+                        class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 sm:px-3 py-1 text-xs sm:text-sm hover:bg-violet-500/20">
                     {{ v if v<1000 else '%dK'|format(v//1000) }}
                 </button>
                 {% endfor %}
-                <button onclick="document.getElementById('bet-amount').value=Math.floor(bal)" 
-                        class="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-1 text-sm hover:bg-red-500/20 text-red-400">
+                <button onclick="document.getElementById('bet-amount').value=Math.floor(bal)"
+                        class="bg-red-500/10 border border-red-500/20 rounded-lg px-2 sm:px-3 py-1 text-xs sm:text-sm hover:bg-red-500/20 text-red-400">
                     ALL IN
                 </button>
             </div>
-            <button onclick="placeBet()" id="bet-btn" 
-                    class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">
+            <button onclick="placeBet()" id="bet-btn"
+                    class="btn-neon text-white px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-black neon-glow w-full sm:w-auto">
                 📈 СТАВКА
             </button>
         </div>
 
         <!-- Flying Phase -->
         <div id="fly-phase" class="hidden">
-            <button onclick="cashout()" id="cashout-btn" 
-                    class="btn-green text-white px-12 py-4 rounded-2xl text-xl font-black green-glow animate-pulse">
+            <button onclick="cashout()" id="cashout-btn"
+                    class="btn-green text-white px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-black green-glow animate-pulse w-full sm:w-auto">
                 💰 ЗАБРАТЬ
             </button>
-            <p class="text-gray-400 text-sm mt-3">
+            <p class="text-gray-400 text-xs sm:text-sm mt-3">
                 Потенциальный выигрыш: <span id="potential-win" class="text-emerald-400 font-bold">0₽</span>
             </p>
         </div>
 
         <!-- Result Phase -->
         <div id="result-phase" class="hidden">
-            <button onclick="newRound()" class="btn-neon text-white px-8 py-3 rounded-xl font-bold">
+            <button onclick="newRound()" class="btn-neon text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base w-full sm:w-auto">
                 🔄 Новый раунд
             </button>
         </div>
     </div>
 
     <!-- History -->
-    <div class="glass rounded-2xl p-4 border border-gray-800 mt-6">
-        <h3 class="text-sm font-bold mb-2">📊 История крашей:</h3>
-        <div id="crash-history" class="flex gap-2 flex-wrap"></div>
+    <div class="glass rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-800 mt-4 sm:mt-6">
+        <h3 class="text-xs sm:text-sm font-bold mb-2">📊 История крашей:</h3>
+        <div id="crash-history" class="flex gap-1.5 sm:gap-2 flex-wrap"></div>
     </div>
 </div>
 {% endblock %}
@@ -91,8 +94,24 @@ let history = [];
 
 const canvas = document.getElementById('crash-graph');
 const ctx = canvas.getContext('2d');
-const W = canvas.width = 600;
-const H = canvas.height = 300;
+
+// Адаптивный размер canvas
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * 2; // Retina
+    canvas.height = rect.height * 2;
+    ctx.scale(2, 2);
+}
+
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    drawGraph();
+});
+
+resizeCanvas();
+
+const W = canvas.width / 2;
+const H = canvas.height / 2;
 
 // Graph state
 let graphData = [];
@@ -100,7 +119,7 @@ let animationFrame = null;
 
 function drawGraph() {
     ctx.clearRect(0, 0, W, H);
-    
+
     // Background grid
     ctx.strokeStyle = 'rgba(139,92,246,0.1)';
     ctx.lineWidth = 1;
@@ -110,21 +129,21 @@ function drawGraph() {
         ctx.moveTo(40, y);
         ctx.lineTo(W - 20, y);
         ctx.stroke();
-        
+
         // Y-axis labels
         ctx.fillStyle = '#666';
         ctx.font = '11px Inter';
         ctx.textAlign = 'right';
         ctx.fillText((i * 2) + 'x', 35, y + 4);
     }
-    
+
     if (graphData.length < 2) return;
-    
+
     // Draw gradient fill
     const gradient = ctx.createLinearGradient(0, 0, 0, H);
     gradient.addColorStop(0, 'rgba(16,185,129,0.3)');
     gradient.addColorStop(1, 'rgba(16,185,129,0.0)');
-    
+
     ctx.beginPath();
     ctx.moveTo(40, H);
     graphData.forEach((point, i) => {
@@ -136,7 +155,7 @@ function drawGraph() {
     ctx.lineTo(40 + ((W - 60) * (graphData.length - 1) / Math.max(graphData.length - 1, 1)), H);
     ctx.fillStyle = gradient;
     ctx.fill();
-    
+
     // Draw line
     ctx.beginPath();
     graphData.forEach((point, i) => {
@@ -145,22 +164,22 @@ function drawGraph() {
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
     });
-    
+
     const color = cashedOut ? '#10b981' : (gameActive ? '#7c3aed' : '#dc2626');
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
     ctx.stroke();
-    
+
     // Draw crash point indicator
     if (!gameActive && crashPoint > 0) {
         const lastX = 40 + ((W - 60) * (graphData.length - 1) / Math.max(graphData.length - 1, 1));
         const lastY = H - (H * Math.min(crashPoint - 1, 9) / 10);
-        
+
         ctx.beginPath();
         ctx.arc(lastX, lastY, 6, 0, Math.PI * 2);
         ctx.fillStyle = '#dc2626';
         ctx.fill();
-        
+
         ctx.fillStyle = '#ef4444';
         ctx.font = 'bold 14px Inter';
         ctx.textAlign = 'center';
@@ -172,14 +191,14 @@ async function placeBet() {
     const bet = parseFloat(document.getElementById('bet-amount').value);
     if (!bet || bet <= 0) return showToast('Введите ставку', 'error');
     if (bet > bal) return showToast('Недостаточно средств', 'error');
-    
+
     currentBet = bet;
     betPlaced = true;
     cashedOut = false;
-    
+
     document.getElementById('bet-phase').classList.add('hidden');
     document.getElementById('crash-status').textContent = '⏳ Ожидание раунда...';
-    
+
     // Start round after 1 second
     setTimeout(() => startRound(), 1000);
 }
@@ -192,39 +211,39 @@ async function startRound() {
         body: JSON.stringify({bet: currentBet})
     });
     const data = await r.json();
-    
+
     if (!data.success) {
         showToast(data.message || 'Ошибка', 'error');
         resetRound();
         return;
     }
-    
+
     crashPoint = data.crash_point;
     gameActive = true;
     currentMultiplier = 1.00;
     graphData = [{time: 0, mult: 1.00}];
-    
+
     document.getElementById('fly-phase').classList.remove('hidden');
     document.getElementById('crash-status').textContent = '🚀 ЛЕТИМ!';
-    
+
     // Animate graph
     const startTime = Date.now();
     const duration = Math.min(crashPoint * 1500, 10000); // Max 10 seconds
-    
+
     function animate() {
         if (!gameActive) return;
-        
+
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        
+
         // Calculate current multiplier (exponential curve)
         currentMultiplier = 1 + (crashPoint - 1) * Math.pow(progress, 0.8);
         currentMultiplier = Math.min(currentMultiplier, crashPoint);
-        
+
         // Update display
         const multEl = document.getElementById('crash-multiplier');
         multEl.textContent = currentMultiplier.toFixed(2) + 'x';
-        
+
         // Color change based on multiplier
         if (currentMultiplier >= 5) {
             multEl.style.color = '#f59e0b';
@@ -236,37 +255,37 @@ async function startRound() {
             multEl.style.color = '#8b5cf6';
             multEl.style.textShadow = '0 0 20px rgba(139,92,246,0.8)';
         }
-        
-        document.getElementById('potential-win').textContent = 
+
+        document.getElementById('potential-win').textContent =
             Math.floor(currentBet * currentMultiplier) + '₽';
-        
+
         // Add to graph data
         graphData.push({time: elapsed, mult: currentMultiplier});
         if (graphData.length > 100) graphData.shift();
-        
+
         drawGraph();
-        
+
         // Check if crashed
         if (currentMultiplier >= crashPoint) {
             crash();
             return;
         }
-        
+
         animationFrame = requestAnimationFrame(animate);
     }
-    
+
     animate();
 }
 
 async function cashout() {
     if (!gameActive || cashedOut) return;
-    
+
     cashedOut = true;
     gameActive = false;
     cancelAnimationFrame(animationFrame);
-    
+
     const payout = Math.floor(currentBet * currentMultiplier);
-    
+
     // Send to server
     const r = await fetch('/api/game/crash/cashout', {
         method: 'POST',
@@ -278,24 +297,24 @@ async function cashout() {
         })
     });
     const data = await r.json();
-    
+
     if (data.success) {
         bal = data.balance;
         updateBalance(bal);
-        
-        document.getElementById('result-area').innerHTML = 
+
+        document.getElementById('result-area').innerHTML =
             `<div class="win-animation"><p class="text-2xl font-black text-emerald-400">
             💰 Забрано! +${data.profit}₽ (x${currentMultiplier.toFixed(2)})</p></div>`;
-        
-        document.getElementById('crash-status').textContent = 
+
+        document.getElementById('crash-status').textContent =
             '✅ Вы забрали на x' + currentMultiplier.toFixed(2);
-        
+
         addHistory(currentMultiplier, true);
     }
-    
+
     document.getElementById('fly-phase').classList.add('hidden');
     document.getElementById('result-phase').classList.remove('hidden');
-    
+
     drawGraph();
 }
 
@@ -303,28 +322,28 @@ function crash() {
     gameActive = false;
     cashedOut = false;
     cancelAnimationFrame(animationFrame);
-    
+
     const multEl = document.getElementById('crash-multiplier');
     multEl.textContent = crashPoint.toFixed(2) + 'x';
     multEl.style.color = '#dc2626';
     multEl.style.textShadow = '0 0 40px rgba(220,38,38,1)';
     multEl.classList.add('animate-pulse');
-    
-    document.getElementById('crash-status').innerHTML = 
+
+    document.getElementById('crash-status').innerHTML =
         '<span class="text-red-400 text-xl font-bold">💥 КРАШ!</span>';
-    
-    document.getElementById('result-area').innerHTML = 
+
+    document.getElementById('result-area').innerHTML =
         `<p class="text-xl font-bold text-red-400">💥 Разбился на x${crashPoint.toFixed(2)}! -${currentBet}₽</p>`;
-    
+
     document.getElementById('fly-phase').classList.add('hidden');
     document.getElementById('result-phase').classList.remove('hidden');
-    
+
     addHistory(crashPoint, false);
-    
+
     // Update balance (already deducted on server)
     bal -= currentBet;
     updateBalance(bal);
-    
+
     drawGraph();
 }
 
@@ -333,18 +352,18 @@ function newRound() {
     cashedOut = false;
     currentMultiplier = 1.00;
     graphData = [];
-    
+
     const multEl = document.getElementById('crash-multiplier');
     multEl.textContent = '1.00x';
     multEl.style.color = '#8b5cf6';
     multEl.style.textShadow = '0 0 20px rgba(139,92,246,0.8)';
     multEl.classList.remove('animate-pulse');
-    
+
     document.getElementById('crash-status').textContent = 'Сделай ставку';
     document.getElementById('result-area').innerHTML = '';
     document.getElementById('result-phase').classList.add('hidden');
     document.getElementById('bet-phase').classList.remove('hidden');
-    
+
     drawGraph();
 }
 
@@ -355,8 +374,8 @@ function resetRound() {
 }
 
 function addHistory(mult, won) {
-    const color = won ? 'bg-emerald-500/20 text-emerald-400' : 
-                  mult >= 2 ? 'bg-amber-500/20 text-amber-400' : 
+    const color = won ? 'bg-emerald-500/20 text-emerald-400' :
+                  mult >= 2 ? 'bg-amber-500/20 text-amber-400' :
                   'bg-red-500/20 text-red-400';
     history.unshift(`<span class="${color} rounded-lg px-2 py-1 text-xs font-bold">${mult.toFixed(2)}x</span>`);
     if (history.length > 20) history.pop();

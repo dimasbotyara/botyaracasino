@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>{% block title %}botyaracasino{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="apple-touch-icon" href="/favicon.svg">
@@ -12,11 +12,18 @@
 
         * {
             font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             background: #0a0a0f;
             min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Улучшенная поддержка touch */
+        button, a, input, select {
+            -webkit-tap-highlight-color: rgba(139,92,246,0.2);
         }
 
         .neon-border {
@@ -40,10 +47,10 @@
             transition: all 0.3s ease;
         }
 
-            .card-hover:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 0 30px rgba(139,92,246,0.3);
-            }
+        .card-hover:hover, .card-hover:active {
+            transform: translateY(-5px);
+            box-shadow: 0 0 30px rgba(139,92,246,0.3);
+        }
 
         .glass {
             background: rgba(15,15,25,0.8);
@@ -53,47 +60,44 @@
         .btn-neon {
             background: linear-gradient(135deg, #7c3aed, #6d28d9);
             transition: all 0.3s ease;
+            touch-action: manipulation;
         }
 
-            .btn-neon:hover {
-                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-                box-shadow: 0 0 25px rgba(139,92,246,0.5);
-                transform: scale(1.02);
-            }
+        .btn-neon:hover, .btn-neon:active {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            box-shadow: 0 0 25px rgba(139,92,246,0.5);
+            transform: scale(1.02);
+        }
 
         .btn-green {
             background: linear-gradient(135deg, #059669, #047857);
             transition: all 0.3s;
+            touch-action: manipulation;
         }
 
-            .btn-green:hover {
-                background: linear-gradient(135deg, #10b981, #059669);
-                box-shadow: 0 0 25px rgba(16,185,129,0.5);
-            }
+        .btn-green:hover, .btn-green:active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            box-shadow: 0 0 25px rgba(16,185,129,0.5);
+        }
 
         .btn-red {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             transition: all 0.3s;
         }
 
-            .btn-red:hover {
-                background: linear-gradient(135deg, #ef4444, #dc2626);
-            }
+        .btn-red:hover, .btn-red:active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
 
         .bg-pattern {
-            background-image: radial-gradient(circle at 20% 50%, rgba(139,92,246,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(16,185,129,0.05) 0%, transparent 50%), radial-gradient(circle at 40% 80%, rgba(245,158,11,0.03) 0%, transparent 50%);
+            background-image: radial-gradient(circle at 20% 50%, rgba(139,92,246,0.05) 0%, transparent 50%),
+                            radial-gradient(circle at 80% 20%, rgba(16,185,129,0.05) 0%, transparent 50%),
+                            radial-gradient(circle at 40% 80%, rgba(245,158,11,0.03) 0%, transparent 50%);
         }
 
         @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .slide-up {
@@ -105,10 +109,7 @@
         }
 
         @keyframes fadeOut {
-            to {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
+            to { opacity: 0; transform: translateY(-10px); }
         }
 
         .win-animation {
@@ -116,13 +117,8 @@
         }
 
         @keyframes winPulse {
-            0%,100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.08);
-            }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
         }
 
         ::-webkit-scrollbar {
@@ -142,6 +138,148 @@
             background: linear-gradient(135deg, rgba(139,92,246,0.1), rgba(16,185,129,0.1));
             border: 1px solid rgba(139,92,246,0.2);
         }
+
+        /* ============================================ */
+        /*         МОБИЛЬНАЯ ОПТИМИЗАЦИЯ 📱            */
+        /* ============================================ */
+
+        /* Навбар на мобилках */
+        @media (max-width: 768px) {
+            nav .max-w-7xl {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 0.75rem;
+            }
+
+            nav .flex.items-center.gap-4 {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            nav a, nav button {
+                font-size: 0.75rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            .neon-border.rounded-xl.px-4.py-2 {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Кнопки на телефонах крупнее */
+        @media (max-width: 640px) {
+            button, .btn-neon, .btn-green, .btn-red {
+                min-height: 48px; /* Apple рекомендует 44px минимум для touch */
+                font-size: 1rem;
+            }
+
+            input, select, textarea {
+                min-height: 48px;
+                font-size: 16px; /* Предотвращает зум на iOS */
+            }
+
+            /* Карточки игр */
+            .card-hover {
+                padding: 1rem !important;
+            }
+
+            .card-hover .text-4xl {
+                font-size: 2.5rem;
+            }
+
+            .card-hover .text-lg {
+                font-size: 1rem;
+            }
+
+            /* Модалки на весь экран */
+            #deposit-modal .glass {
+                width: 95%;
+                max-width: 400px;
+                margin: 1rem;
+            }
+
+            /* Чат компактнее */
+            #chat-panel {
+                width: 100%;
+                bottom: 0;
+                right: 0;
+                left: 0;
+                border-radius: 1rem 1rem 0 0;
+            }
+
+            #chat-toggle {
+                bottom: 1rem;
+                right: 1rem;
+                width: 56px;
+                height: 56px;
+                font-size: 1.5rem;
+            }
+
+            /* Флеш сообщения */
+            .flash-message {
+                right: 0.5rem;
+                left: 0.5rem;
+                top: 5rem;
+                width: auto;
+            }
+        }
+
+        /* Горизонтальный скролл таблиц */
+        .overflow-x-auto {
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Убираем зум на инпутах (iOS) */
+        @supports (-webkit-touch-callout: none) {
+            input, select, textarea {
+                font-size: 16px !important;
+            }
+        }
+
+        /* Улучшенная читаемость на маленьких экранах */
+        @media (max-width: 640px) {
+            h1 { font-size: 1.75rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+
+            .text-4xl { font-size: 2rem; }
+            .text-3xl { font-size: 1.75rem; }
+            .text-2xl { font-size: 1.5rem; }
+
+            /* Отступы компактнее */
+            main { padding: 1rem; }
+
+            .p-8 { padding: 1.5rem; }
+            .p-6 { padding: 1rem; }
+            .p-5 { padding: 0.75rem; }
+        }
+
+        /* Landscape mode (горизонтальная ориентация) */
+        @media (max-width: 768px) and (orientation: landscape) {
+            nav .max-w-7xl {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+
+            #chat-panel {
+                width: 320px;
+                right: 0;
+                left: auto;
+            }
+        }
+
+        /* Анимации на touch устройствах плавнее */
+        @media (hover: none) and (pointer: coarse) {
+            .card-hover:active {
+                transform: scale(0.98);
+            }
+
+            button:active {
+                transform: scale(0.97);
+            }
+        }
     </style>
 </head>
 <body class="bg-pattern text-white">
@@ -151,30 +289,69 @@
 
     {% if session.get('user_id') %}
     <nav class="glass border-b border-violet-500/20 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <a href="/dashboard" class="flex items-center gap-2">
-                <img src="/avatar.svg" alt="botyaracasino" class="w-8 h-8 rounded-lg">
-                <span class="text-xl font-bold bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
-                    botyaracasino
-                </span>
-            </a>
-
-            <div class="flex items-center gap-4">
-                <a href="/leaderboard" class="text-gray-400 hover:text-violet-400 transition text-sm font-medium">🏆 Лидеры</a>
-                <a href="/profile" class="text-gray-400 hover:text-violet-400 transition text-sm font-medium">👤 Профиль</a>
-
-                <div class="neon-border rounded-xl px-4 py-2 flex items-center gap-3">
-                    <span class="text-gray-400 text-sm" id="nav-username">{{ session.get('username','') }}</span>
-                    <div class="h-4 w-px bg-violet-500/30"></div>
-                    <span class="text-emerald-400 font-bold text-sm" id="nav-balance">
-                        {{ "%.0f"|format(user.balance if user else 0) }}₽
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <!-- Desktop Layout -->
+            <div class="hidden md:flex items-center justify-between">
+                <a href="/dashboard" class="flex items-center gap-2">
+                    <img src="/avatar.svg" alt="botyaracasino" class="w-8 h-8 rounded-lg">
+                    <span class="text-xl font-bold bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
+                        botyaracasino
                     </span>
+                </a>
+
+                <div class="flex items-center gap-4">
+                    <a href="/leaderboard" class="text-gray-400 hover:text-violet-400 transition text-sm font-medium">🏆 Лидеры</a>
+                    <a href="/profile" class="text-gray-400 hover:text-violet-400 transition text-sm font-medium">👤 Профиль</a>
+
+                    <div class="neon-border rounded-xl px-4 py-2 flex items-center gap-3">
+                        <span class="text-gray-400 text-sm" id="nav-username">{{ session.get('username','') }}</span>
+                        <div class="h-4 w-px bg-violet-500/30"></div>
+                        <span class="text-emerald-400 font-bold text-sm" id="nav-balance">
+                            {{ "%.0f"|format(user.balance if user else 0) }}₽
+                        </span>
+                    </div>
+
+                    <button onclick="openDepositModal()" class="btn-green text-white px-4 py-2 rounded-xl text-sm font-bold">
+                        💰 Пополнить
+                    </button>
+                    <a href="/logout" class="text-gray-500 hover:text-red-400 transition text-sm">Выход</a>
+                </div>
+            </div>
+
+            <!-- Mobile Layout -->
+            <div class="md:hidden">
+                <!-- Top Row: Logo + Balance -->
+                <div class="flex items-center justify-between mb-2">
+                    <a href="/dashboard" class="flex items-center gap-2">
+                        <img src="/avatar.svg" alt="botyaracasino" class="w-7 h-7 rounded-lg">
+                        <span class="text-lg font-bold bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
+                            botyaracasino
+                        </span>
+                    </a>
+                    <div class="neon-border rounded-lg px-3 py-1.5 flex items-center gap-2">
+                        <span class="text-emerald-400 font-bold text-sm" id="nav-balance-mobile">
+                            {{ "%.0f"|format(user.balance if user else 0) }}₽
+                        </span>
+                    </div>
                 </div>
 
-                <button onclick="openDepositModal()" class="btn-green text-white px-4 py-2 rounded-xl text-sm font-bold">
-                    💰 Пополнить
-                </button>
-                <a href="/logout" class="text-gray-500 hover:text-red-400 transition text-sm">Выход</a>
+                <!-- Bottom Row: Actions -->
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex gap-2 flex-1">
+                        <a href="/leaderboard" class="flex-1 text-center bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-1.5 text-xs hover:bg-violet-500/20">
+                            🏆
+                        </a>
+                        <a href="/profile" class="flex-1 text-center bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-1.5 text-xs hover:bg-violet-500/20">
+                            👤
+                        </a>
+                        <button onclick="openDepositModal()" class="flex-1 btn-green text-white rounded-lg px-2 py-1.5 text-xs font-bold">
+                            💰
+                        </button>
+                    </div>
+                    <a href="/logout" class="bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg px-3 py-1.5 text-xs hover:bg-red-500/20">
+                        Выход
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
@@ -237,8 +414,8 @@
 
     {% if session.get('user_id') %}
     <!-- Chat Panel -->
-    <div id="chat-panel" class="fixed bottom-4 right-4 z-40 w-80 hidden">
-        <div class="glass neon-border rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/10">
+    <div id="chat-panel" class="fixed bottom-0 sm:bottom-4 right-0 sm:right-4 z-40 w-full sm:w-80 hidden">
+        <div class="glass neon-border rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl shadow-violet-500/10">
             <div class="bg-violet-500/10 px-4 py-3 flex items-center justify-between border-b border-violet-500/20 cursor-pointer" onclick="toggleChat()">
                 <span class="font-bold text-sm">💬 Чат</span>
                 <div class="flex items-center gap-2">
@@ -246,22 +423,22 @@
                     <span class="text-gray-400 text-xs">▼</span>
                 </div>
             </div>
-            <div id="chat-messages" class="h-64 overflow-y-auto px-3 py-2 space-y-1 text-sm" style="scrollbar-width: thin;">
+            <div id="chat-messages" class="h-64 sm:h-80 overflow-y-auto px-3 py-2 space-y-1 text-sm" style="scrollbar-width: thin;">
                 <p class="text-gray-500 text-xs text-center">Загрузка...</p>
             </div>
             <div class="px-3 py-2 border-t border-violet-500/20 flex gap-2">
                 <input type="text" id="chat-input" placeholder="Сообщение..."
-                       maxlength="500"
-                       onkeypress="if(event.key==='Enter')sendChatMsg()"
-                       class="flex-1 bg-black/40 border border-violet-500/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500 placeholder-gray-600">
-                <button onclick="sendChatMsg()" class="bg-violet-600 hover:bg-violet-500 text-white px-3 py-2 rounded-lg text-sm transition">➤</button>
+                    maxlength="500"
+                    onkeypress="if(event.key==='Enter')sendChatMsg()"
+                    class="flex-1 bg-black/40 border border-violet-500/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500 placeholder-gray-600">
+                <button onclick="sendChatMsg()" class="bg-violet-600 hover:bg-violet-500 text-white px-3 sm:px-4 py-2 rounded-lg text-sm transition">➤</button>
             </div>
         </div>
     </div>
 
     <!-- Chat Toggle Button -->
     <button id="chat-toggle" onclick="toggleChat()"
-            class="fixed bottom-4 right-4 z-40 bg-violet-600 hover:bg-violet-500 text-white w-14 h-14 rounded-full shadow-lg shadow-violet-500/30 text-2xl transition hover:scale-110 flex items-center justify-center">
+            class="fixed bottom-4 right-4 z-40 bg-violet-600 hover:bg-violet-500 text-white w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-lg shadow-violet-500/30 text-2xl sm:text-3xl transition hover:scale-110 flex items-center justify-center">
         💬
         <span id="chat-badge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">0</span>
     </button>

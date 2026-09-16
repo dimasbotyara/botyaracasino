@@ -1,39 +1,49 @@
 {% extends 'base.html' %}
 {% block title %}🎯 Колесо Фортуны{% endblock %}
 {% block content %}
-<div class="slide-up max-w-2xl mx-auto">
-    <div class="flex items-center gap-3 mb-6">
-        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
-        <h1 class="text-3xl font-black">🎯 Колесо Фортуны</h1>
+<div class="slide-up max-w-2xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition text-sm sm:text-base">← Назад</a>
+        <h1 class="text-2xl sm:text-3xl font-black">🎯 Колесо Фортуны</h1>
     </div>
-    <div class="glass neon-border rounded-3xl p-8 text-center">
-        <div class="mb-6">
-            <p class="text-gray-400 text-sm mb-1">Баланс</p>
-            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+    <div class="glass neon-border rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center">
+        <div class="mb-4 sm:mb-6">
+            <p class="text-gray-400 text-xs sm:text-sm mb-1">Баланс</p>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
         </div>
 
         <!-- Wheel -->
-        <div class="relative inline-block mb-6">
-            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 text-3xl z-10">▼</div>
-            <canvas id="wheel-canvas" width="300" height="300" class="rounded-full border-4 border-violet-500/40"></canvas>
+        <div class="relative inline-block mb-4 sm:mb-6">
+            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 text-2xl sm:text-3xl z-10">▼</div>
+            <canvas id="wheel-canvas"
+                    class="rounded-full border-2 sm:border-4 border-violet-500/40 w-full max-w-[280px] sm:max-w-[300px] mx-auto"
+                    style="aspect-ratio: 1/1;">
+            </canvas>
         </div>
 
-        <div id="result-area" class="mb-6 h-14 flex items-center justify-center">
-            <p class="text-gray-500">Крути колесо!</p>
+        <div id="result-area" class="mb-4 sm:mb-6 h-12 sm:h-14 flex items-center justify-center">
+            <p class="text-gray-500 text-sm sm:text-base">Крути колесо!</p>
         </div>
 
-        <input type="number" id="bet-amount" min="1" value="100" class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-lg font-bold focus:outline-none focus:border-violet-500 mb-4">
-        <div class="flex justify-center gap-2 mb-6">
+        <input type="number" id="bet-amount" min="1" value="100"
+               class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white text-center text-sm sm:text-base font-bold focus:outline-none focus:border-violet-500 mb-3 sm:mb-4 block">
+        <div class="flex justify-center gap-1 sm:gap-2 mb-4 sm:mb-6 flex-wrap">
             {% for v in [50,100,500,1000,5000] %}
-            <button onclick="document.getElementById('bet-amount').value={{v}}" class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">{{ v if v<1000 else '%dK'|format(v//1000) }}</button>
+            <button onclick="document.getElementById('bet-amount').value={{v}}"
+                    class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 sm:px-3 py-1 text-xs sm:text-sm hover:bg-violet-500/20">
+                {{ v if v<1000 else '%dK'|format(v//1000) }}
+            </button>
             {% endfor %}
         </div>
-        <button id="wheel-btn" onclick="spinWheel()" class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">🎯 КРУТИТЬ</button>
+        <button id="wheel-btn" onclick="spinWheel()"
+                class="btn-neon text-white px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-black neon-glow w-full sm:w-auto">
+            🎯 КРУТИТЬ
+        </button>
     </div>
 
-    <div class="glass rounded-2xl p-4 border border-gray-800 mt-6">
-        <h3 class="text-sm font-bold mb-2">Сектора:</h3>
-        <div class="flex flex-wrap gap-2 text-xs">
+    <div class="glass rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-800 mt-4 sm:mt-6">
+        <h3 class="text-xs sm:text-sm font-bold mb-2">Сектора:</h3>
+        <div class="flex flex-wrap gap-1.5 sm:gap-2 text-xs">
             <span class="bg-purple-900 px-2 py-1 rounded">x0.5 (22%)</span>
             <span class="bg-violet-800 px-2 py-1 rounded">x1 (25%)</span>
             <span class="bg-violet-600 px-2 py-1 rounded">x1.5 (20%)</span>
@@ -58,10 +68,24 @@ let currentRotation = 0;
 const canvas = document.getElementById('wheel-canvas');
 const ctx = canvas.getContext('2d');
 
+// Адаптивный размер canvas
+function resizeCanvas() {
+    const size = Math.min(canvas.offsetWidth, 300) * 2; // Retina
+    canvas.width = size;
+    canvas.height = size;
+    ctx.scale(2, 2);
+    drawWheel();
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const W = canvas.width / 2;
+const H = canvas.height / 2;
+
 function drawWheel(angle = 0, segs = null) {
     const useSegs = segs || segments;
     if (!useSegs.length) {
-        // Дефолтное колесо для отображения до первого спина
         const defaultSegs = [
             {label:'x0.5', color:'#4a1942'},
             {label:'x1', color:'#6b21a8'},
@@ -80,13 +104,11 @@ function drawWheel(angle = 0, segs = null) {
 }
 
 function drawSegments(angle, segs) {
-    const cx = 150, cy = 150, r = 145;
+    const cx = W/2, cy = H/2, r = Math.min(W, H)/2 - 5;
     const n = segs.length;
     const arc = 2 * Math.PI / n;
-    ctx.clearRect(0, 0, 300, 300);
+    ctx.clearRect(0, 0, W, H);
 
-    // Начинаем рисовать сверху (указатель ▼ сверху)
-    // Сектор 0 центрируется вверху при angle=0
     const startAngle = -Math.PI/2 - arc/2 + angle;
 
     for (let i = 0; i < n; i++) {
@@ -98,31 +120,30 @@ function drawSegments(angle, segs) {
         ctx.fillStyle = segs[i].color;
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Текст
+        // Text
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(a + arc/2);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 13px Inter';
+        ctx.font = 'bold 10px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText(segs[i].label, r * 0.68, 5);
+        ctx.fillText(segs[i].label, r * 0.68, 3);
         ctx.restore();
     }
 
-    // Центр
+    // Center
     ctx.beginPath();
-    ctx.arc(cx, cy, 22, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, 15, 0, 2 * Math.PI);
     ctx.fillStyle = '#0a0a0f';
     ctx.fill();
     ctx.strokeStyle = '#7c3aed';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 2;
     ctx.stroke();
 }
 
-// Рисуем колесо при загрузке
 drawWheel();
 
 async function spinWheel() {
@@ -153,9 +174,6 @@ async function spinWheel() {
     const arc = 2 * Math.PI / n;
     const idx = d.segment_index;
 
-    // Целевой угол: чтобы центр сектора idx оказался под указателем (сверху)
-    // При rotation=0 сектор 0 сверху => сектор idx нужно "открутить" на -idx*arc
-    // Добавляем 6 полных оборотов для эффекта
     const targetRotation = currentRotation
         + 6 * 2 * Math.PI
         + ((-idx * arc) - (currentRotation % (2 * Math.PI)));
@@ -168,7 +186,7 @@ async function spinWheel() {
     function animate() {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 4); // ease out quart
+        const eased = 1 - Math.pow(1 - progress, 4);
         currentRotation = startRot + totalDelta * eased;
         drawWheel(currentRotation);
 
@@ -180,11 +198,11 @@ async function spinWheel() {
             const ra = document.getElementById('result-area');
 
             if (d.is_win) {
-                ra.innerHTML = `<div class="win-animation"><p class="text-2xl font-black text-emerald-400">🎉 ${d.label}! +${Math.floor(d.profit)}₽</p></div>`;
+                ra.innerHTML = `<div class="win-animation"><p class="text-lg sm:text-2xl font-black text-emerald-400">🎉 ${d.label}! +${Math.floor(d.profit)}₽</p></div>`;
             } else if (d.multiplier > 0) {
-                ra.innerHTML = `<p class="text-xl font-bold text-amber-400">⚠️ ${d.label} (вернулось ${Math.floor(d.payout)}₽)</p>`;
+                ra.innerHTML = `<p class="text-base sm:text-xl font-bold text-amber-400">⚠️ ${d.label} (вернулось ${Math.floor(d.payout)}₽)</p>`;
             } else {
-                ra.innerHTML = `<p class="text-xl font-bold text-red-400">😢 ${d.label}! -${Math.floor(bet)}₽</p>`;
+                ra.innerHTML = `<p class="text-base sm:text-xl font-bold text-red-400">😢 ${d.label}! -${Math.floor(bet)}₽</p>`;
             }
 
             spinning = false;

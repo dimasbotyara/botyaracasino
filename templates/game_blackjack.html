@@ -1,55 +1,43 @@
 {% extends 'base.html' %}
 {% block title %}🃏 Блэкджек{% endblock %}
 {% block content %}
-<div class="slide-up max-w-2xl mx-auto">
-    <div class="flex items-center gap-3 mb-6">
-        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
-        <h1 class="text-3xl font-black">🃏 Блэкджек</h1>
+<div class="slide-up max-w-2xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition text-sm sm:text-base">← Назад</a>
+        <h1 class="text-2xl sm:text-3xl font-black">🃏 Блэкджек</h1>
     </div>
-    <div class="glass neon-border rounded-3xl p-8 text-center">
-        <div class="mb-6">
-            <p class="text-gray-400 text-sm mb-1">Баланс</p>
-            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+    <div class="glass neon-border rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center">
+        <div class="mb-4 sm:mb-6">
+            <p class="text-gray-400 text-xs sm:text-sm mb-1">Баланс</p>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
         </div>
-
-        <!-- Dealer -->
-        <div class="mb-6">
-            <p class="text-sm text-gray-400 mb-2">Дилер <span id="dealer-val" class="text-violet-400 font-bold"></span></p>
-            <div id="dealer-cards" class="flex justify-center gap-2 min-h-[80px]"></div>
+        <div class="mb-4 sm:mb-6">
+            <p class="text-xs sm:text-sm text-gray-400 mb-2">Дилер <span id="dealer-val" class="text-violet-400 font-bold"></span></p>
+            <div id="dealer-cards" class="flex justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[80px]"></div>
         </div>
-
-        <div class="h-px bg-violet-500/20 my-4"></div>
-
-        <!-- Player -->
-        <div class="mb-6">
-            <p class="text-sm text-gray-400 mb-2">Вы <span id="player-val" class="text-emerald-400 font-bold"></span></p>
-            <div id="player-cards" class="flex justify-center gap-2 min-h-[80px]"></div>
+        <div class="h-px bg-violet-500/20 my-3 sm:my-4"></div>
+        <div class="mb-4 sm:mb-6">
+            <p class="text-xs sm:text-sm text-gray-400 mb-2">Вы <span id="player-val" class="text-emerald-400 font-bold"></span></p>
+            <div id="player-cards" class="flex justify-center gap-1 sm:gap-2 min-h-[60px] sm:min-h-[80px]"></div>
         </div>
-
-        <div id="result-area" class="mb-6 h-14 flex items-center justify-center"></div>
-
-        <!-- Deal Phase -->
+        <div id="result-area" class="mb-4 sm:mb-6 h-12 sm:h-14 flex items-center justify-center"></div>
         <div id="deal-phase">
-            <input type="number" id="bet-amount" min="1" value="100" class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-lg font-bold focus:outline-none focus:border-violet-500 mb-4">
-            <div class="flex justify-center gap-2 mb-4">
+            <input type="number" id="bet-amount" min="1" value="100" class="w-full max-w-xs mx-auto bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center text-base sm:text-lg font-bold focus:outline-none focus:border-violet-500 mb-3 sm:mb-4">
+            <div class="flex justify-center gap-1 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
                 {% for v in [50,100,500,1000,5000] %}
-                <button onclick="document.getElementById('bet-amount').value={{v}}" class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">{{ v if v<1000 else '%dK'|format(v//1000) }}</button>
+                <button onclick="document.getElementById('bet-amount').value={{v}}" class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 sm:px-3 py-1 text-xs sm:text-sm hover:bg-violet-500/20">{{ v if v<1000 else '%dK'|format(v//1000) }}</button>
                 {% endfor %}
             </div>
-            <button onclick="deal()" class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">🃏 РАЗДАТЬ</button>
+            <button onclick="deal()" class="btn-neon text-white px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-black neon-glow w-full sm:w-auto">🃏 РАЗДАТЬ</button>
         </div>
-
-        <!-- Play Phase -->
         <div id="play-phase" class="hidden">
-            <div class="flex justify-center gap-4">
-                <button onclick="hit()" class="btn-green text-white px-8 py-3 rounded-xl font-bold text-lg">👆 Ещё</button>
-                <button onclick="stand()" class="btn-red text-white px-8 py-3 rounded-xl font-bold text-lg">✋ Хватит</button>
+            <div class="flex justify-center gap-3 sm:gap-4">
+                <button onclick="hit()" class="btn-green text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-lg">👆 Ещё</button>
+                <button onclick="stand()" class="btn-red text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-lg">✋ Хватит</button>
             </div>
         </div>
-
-        <!-- New Game -->
         <div id="new-phase" class="hidden">
-            <button onclick="newGame()" class="btn-neon text-white px-8 py-3 rounded-xl font-bold text-lg">🔄 Новая игра</button>
+            <button onclick="newGame()" class="btn-neon text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-lg w-full sm:w-auto">🔄 Новая игра</button>
         </div>
     </div>
 </div>
@@ -59,75 +47,16 @@
 bal={{user.balance}};
 function cardHTML(c){
     const red=['♥','♦'].includes(c.suit);
-    if(c.rank==='?') return `<div class="w-16 h-24 bg-violet-900 rounded-xl border-2 border-violet-500 flex items-center justify-center text-2xl">?</div>`;
-    return `<div class="w-16 h-24 bg-white rounded-xl border-2 ${red?'border-red-400':'border-gray-700'} flex flex-col items-center justify-center">
-        <span class="text-lg font-black ${red?'text-red-500':'text-gray-800'}">${c.rank}</span>
-        <span class="${red?'text-red-500':'text-gray-800'}">${c.suit}</span>
+    if(c.rank==='?') return `<div class="w-12 h-16 sm:w-16 sm:h-24 bg-violet-900 rounded-lg sm:rounded-xl border-2 border-violet-500 flex items-center justify-center text-lg sm:text-2xl">?</div>`;
+    return `<div class="w-12 h-16 sm:w-16 sm:h-24 bg-white rounded-lg sm:rounded-xl border-2 ${red?'border-red-400':'border-gray-700'} flex flex-col items-center justify-center">
+        <span class="text-sm sm:text-lg font-black ${red?'text-red-500':'text-gray-800'}">${c.rank}</span>
+        <span class="text-xs sm:text-base ${red?'text-red-500':'text-gray-800'}">${c.suit}</span>
     </div>`;
 }
 function showCards(id,cards){document.getElementById(id).innerHTML=cards.map(cardHTML).join('');}
-
-async function deal(){
-    const bet=parseFloat(document.getElementById('bet-amount').value);
-    if(!bet||bet<=0) return showToast('Введите ставку','error');
-    if(bet>bal) return showToast('Недостаточно средств','error');
-    const r=await fetch('/api/game/blackjack/deal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bet})});
-    const d=await r.json();
-    showCards('player-cards',d.player);
-    showCards('dealer-cards',d.dealer);
-    document.getElementById('player-val').textContent='('+d.player_value+')';
-    document.getElementById('dealer-val').textContent='('+d.dealer_value+')';
-    if(d.done){
-        bal=d.balance; updateBalance(bal);
-        document.getElementById('result-area').innerHTML=
-            d.status==='blackjack'?`<div class="win-animation"><p class="text-2xl font-black text-emerald-400">${d.message}</p></div>`:
-            `<p class="text-xl font-bold text-gray-400">${d.message}</p>`;
-        document.getElementById('deal-phase').classList.add('hidden');
-        document.getElementById('new-phase').classList.remove('hidden');
-    } else {
-        document.getElementById('deal-phase').classList.add('hidden');
-        document.getElementById('play-phase').classList.remove('hidden');
-    }
-}
-
-async function hit(){
-    const r=await fetch('/api/game/blackjack/hit',{method:'POST',headers:{'Content-Type':'application/json'}});
-    const d=await r.json();
-    showCards('player-cards',d.player);
-    document.getElementById('player-val').textContent='('+d.player_value+')';
-    if(d.done){
-        if(d.dealer) showCards('dealer-cards',d.dealer);
-        if(d.dealer_value) document.getElementById('dealer-val').textContent='('+d.dealer_value+')';
-        bal=d.balance; updateBalance(bal);
-        const cls=d.status==='win'?'text-emerald-400':d.status==='bust'?'text-red-400':'text-gray-400';
-        document.getElementById('result-area').innerHTML=`<div class="win-animation"><p class="text-2xl font-black ${cls}">${d.message}</p></div>`;
-        document.getElementById('play-phase').classList.add('hidden');
-        document.getElementById('new-phase').classList.remove('hidden');
-    }
-}
-
-async function stand(){
-    const r=await fetch('/api/game/blackjack/stand',{method:'POST',headers:{'Content-Type':'application/json'}});
-    const d=await r.json();
-    showCards('player-cards',d.player);
-    showCards('dealer-cards',d.dealer);
-    document.getElementById('player-val').textContent='('+d.player_value+')';
-    document.getElementById('dealer-val').textContent='('+d.dealer_value+')';
-    bal=d.balance; updateBalance(bal);
-    const cls=d.status==='win'?'text-emerald-400':d.status==='loss'?'text-red-400':'text-gray-400';
-    document.getElementById('result-area').innerHTML=`<div class="win-animation"><p class="text-2xl font-black ${cls}">${d.message}</p></div>`;
-    document.getElementById('play-phase').classList.add('hidden');
-    document.getElementById('new-phase').classList.remove('hidden');
-}
-
-function newGame(){
-    document.getElementById('player-cards').innerHTML='';
-    document.getElementById('dealer-cards').innerHTML='';
-    document.getElementById('player-val').textContent='';
-    document.getElementById('dealer-val').textContent='';
-    document.getElementById('result-area').innerHTML='';
-    document.getElementById('new-phase').classList.add('hidden');
-    document.getElementById('deal-phase').classList.remove('hidden');
-}
+async function deal(){const bet=parseFloat(document.getElementById('bet-amount').value);if(!bet||bet<=0)return showToast('Введите ставку','error');if(bet>bal)return showToast('Недостаточно средств','error');const r=await fetch('/api/game/blackjack/deal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bet})});const d=await r.json();showCards('player-cards',d.player);showCards('dealer-cards',d.dealer);document.getElementById('player-val').textContent='('+d.player_value+')';document.getElementById('dealer-val').textContent='('+d.dealer_value+')';if(d.done){bal=d.balance;updateBalance(bal);document.getElementById('result-area').innerHTML=d.status==='blackjack'?`<div class="win-animation"><p class="text-xl sm:text-2xl font-black text-emerald-400">${d.message}</p></div>`:`<p class="text-lg sm:text-xl font-bold text-gray-400">${d.message}</p>`;document.getElementById('deal-phase').classList.add('hidden');document.getElementById('new-phase').classList.remove('hidden');}else{document.getElementById('deal-phase').classList.add('hidden');document.getElementById('play-phase').classList.remove('hidden');}}
+async function hit(){const r=await fetch('/api/game/blackjack/hit',{method:'POST',headers:{'Content-Type':'application/json'}});const d=await r.json();showCards('player-cards',d.player);document.getElementById('player-val').textContent='('+d.player_value+')';if(d.done){if(d.dealer)showCards('dealer-cards',d.dealer);if(d.dealer_value)document.getElementById('dealer-val').textContent='('+d.dealer_value+')';bal=d.balance;updateBalance(bal);const cls=d.status==='win'?'text-emerald-400':d.status==='bust'?'text-red-400':'text-gray-400';document.getElementById('result-area').innerHTML=`<div class="win-animation"><p class="text-xl sm:text-2xl font-black ${cls}">${d.message}</p></div>`;document.getElementById('play-phase').classList.add('hidden');document.getElementById('new-phase').classList.remove('hidden');}}
+async function stand(){const r=await fetch('/api/game/blackjack/stand',{method:'POST',headers:{'Content-Type':'application/json'}});const d=await r.json();showCards('player-cards',d.player);showCards('dealer-cards',d.dealer);document.getElementById('player-val').textContent='('+d.player_value+')';document.getElementById('dealer-val').textContent='('+d.dealer_value+')';bal=d.balance;updateBalance(bal);const cls=d.status==='win'?'text-emerald-400':d.status==='loss'?'text-red-400':'text-gray-400';document.getElementById('result-area').innerHTML=`<div class="win-animation"><p class="text-xl sm:text-2xl font-black ${cls}">${d.message}</p></div>`;document.getElementById('play-phase').classList.add('hidden');document.getElementById('new-phase').classList.remove('hidden');}
+function newGame(){document.getElementById('player-cards').innerHTML='';document.getElementById('dealer-cards').innerHTML='';document.getElementById('player-val').textContent='';document.getElementById('dealer-val').textContent='';document.getElementById('result-area').innerHTML='';document.getElementById('new-phase').classList.add('hidden');document.getElementById('deal-phase').classList.remove('hidden');}
 </script>
 {% endblock %}

@@ -1,76 +1,76 @@
 {% extends 'base.html' %}
 {% block title %}🗼 Башня{% endblock %}
 {% block content %}
-<div class="slide-up max-w-2xl mx-auto">
-    <div class="flex items-center gap-3 mb-6">
-        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
-        <h1 class="text-3xl font-black">🗼 Башня</h1>
+<div class="slide-up max-w-2xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition text-sm sm:text-base">← Назад</a>
+        <h1 class="text-2xl sm:text-3xl font-black">🗼 Башня</h1>
     </div>
-    <div class="glass neon-border rounded-3xl p-8 text-center">
-        <div class="mb-4">
-            <p class="text-gray-400 text-sm mb-1">Баланс</p>
-            <p class="text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
+    <div class="glass neon-border rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-center">
+        <div class="mb-3 sm:mb-4">
+            <p class="text-gray-400 text-xs sm:text-sm mb-1">Баланс</p>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-400" id="game-balance">{{ "%.0f"|format(user.balance) }}₽</p>
         </div>
 
-        <div class="flex justify-center gap-6 mb-4 text-sm">
+        <div class="flex justify-center gap-3 sm:gap-6 mb-3 sm:mb-4 text-xs sm:text-sm">
             <div>Этаж: <span id="tower-level" class="text-amber-400 font-bold">0</span>/10</div>
             <div>Множитель: <span id="tower-mult" class="text-violet-400 font-bold">—</span></div>
             <div>Выплата: <span id="tower-pay" class="text-emerald-400 font-bold">0₽</span></div>
         </div>
 
         <!-- Tower Display -->
-        <div id="tower-display" class="space-y-2 mb-6 max-w-sm mx-auto">
+        <div id="tower-display" class="space-y-1 sm:space-y-2 mb-4 sm:mb-6 max-w-sm mx-auto">
             {% for i in range(9, -1, -1) %}
-            <div id="floor-{{ i }}" class="flex items-center gap-2 opacity-30 transition-all">
-                <span class="text-xs text-gray-500 w-6">{{ i + 1 }}</span>
-                <div class="flex gap-2 flex-1" id="doors-{{ i }}">
-                    <div class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-lg">🚪</div>
-                    <div class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-lg">🚪</div>
-                    <div class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-lg">🚪</div>
+            <div id="floor-{{ i }}" class="flex items-center gap-1 sm:gap-2 opacity-30 transition-all">
+                <span class="text-xs text-gray-500 w-5 sm:w-6">{{ i + 1 }}</span>
+                <div class="flex gap-1 sm:gap-2 flex-1" id="doors-{{ i }}">
+                    <div class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🚪</div>
+                    <div class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🚪</div>
+                    <div class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🚪</div>
                 </div>
-                <span id="mult-{{ i }}" class="text-xs text-gray-600 w-12"></span>
+                <span id="mult-{{ i }}" class="text-xs text-gray-600 w-10 sm:w-12"></span>
             </div>
             {% endfor %}
         </div>
 
-        <div id="result-area" class="mb-4 h-14 flex items-center justify-center">
-            <p class="text-gray-500">Поднимайся по этажам!</p>
+        <div id="result-area" class="mb-3 sm:mb-4 h-12 sm:h-14 flex items-center justify-center">
+            <p class="text-gray-500 text-sm sm:text-base">Поднимайся по этажам!</p>
         </div>
 
         <!-- Setup -->
         <div id="setup-phase">
-            <div class="grid grid-cols-2 gap-4 max-w-sm mx-auto mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-sm mx-auto mb-3 sm:mb-4">
                 <div>
-                    <label class="text-sm text-gray-400 block mb-1">Ставка</label>
+                    <label class="text-xs sm:text-sm text-gray-400 block mb-1">Ставка</label>
                     <input type="number" id="bet-amount" min="1" value="100"
-                           class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-violet-500">
+                           class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white text-center text-sm sm:text-base font-bold focus:outline-none focus:border-violet-500">
                 </div>
                 <div>
-                    <label class="text-sm text-gray-400 block mb-1">Сложность</label>
-                    <select id="difficulty" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white text-center font-bold focus:outline-none focus:border-violet-500">
+                    <label class="text-xs sm:text-sm text-gray-400 block mb-1">Сложность</label>
+                    <select id="difficulty" class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-3 sm:px-4 py-2 sm:py-3 text-white text-center text-sm sm:text-base font-bold focus:outline-none focus:border-violet-500">
                         <option value="easy">Лёгкая (4 двери)</option>
                         <option value="medium" selected>Средняя (3 двери)</option>
                         <option value="hard">Сложная (2 двери)</option>
                     </select>
                 </div>
             </div>
-            <div class="flex justify-center gap-2 mb-4">
+            <div class="flex justify-center gap-1 sm:gap-2 mb-3 sm:mb-4 flex-wrap">
                 {% for v in [50,100,500,1000,5000] %}
                 <button onclick="document.getElementById('bet-amount').value={{v}}"
-                        class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-3 py-1 text-sm hover:bg-violet-500/20">
+                        class="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 sm:px-3 py-1 text-xs sm:text-sm hover:bg-violet-500/20">
                     {{ v if v<1000 else '%dK'|format(v//1000) }}
                 </button>
                 {% endfor %}
             </div>
-            <button onclick="startTower()" class="btn-neon text-white px-12 py-4 rounded-2xl text-xl font-black neon-glow">🗼 НАЧАТЬ</button>
+            <button onclick="startTower()" class="btn-neon text-white px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-black neon-glow w-full sm:w-auto">🗼 НАЧАТЬ</button>
         </div>
 
         <div id="cashout-phase" class="hidden">
-            <button onclick="cashoutTower()" class="btn-green text-white px-12 py-4 rounded-2xl text-xl font-black green-glow">💰 ЗАБРАТЬ</button>
+            <button onclick="cashoutTower()" class="btn-green text-white px-8 sm:px-12 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-lg sm:text-xl font-black green-glow w-full sm:w-auto">💰 ЗАБРАТЬ</button>
         </div>
 
         <div id="new-phase" class="hidden">
-            <button onclick="resetTower()" class="btn-neon text-white px-8 py-3 rounded-xl font-bold">🔄 Новая игра</button>
+            <button onclick="resetTower()" class="btn-neon text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base w-full sm:w-auto">🔄 Новая игра</button>
         </div>
     </div>
 </div>
@@ -97,17 +97,16 @@ async function startTower() {
     numDoors = d.doors;
     mults = d.multipliers;
 
-    // Обновляем отображение
     for (let i = 0; i < 10; i++) {
         const floor = document.getElementById('floor-' + i);
-        floor.className = 'flex items-center gap-2 transition-all ' + (i === 0 ? 'opacity-100' : 'opacity-30');
+        floor.className = 'flex items-center gap-1 sm:gap-2 transition-all ' + (i === 0 ? 'opacity-100' : 'opacity-30');
 
         const doorsDiv = document.getElementById('doors-' + i);
         let html = '';
         for (let j = 0; j < numDoors; j++) {
             html += `<button onclick="chooseDoor(${i},${j})" id="door-${i}-${j}"
-                class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg
-                flex items-center justify-center text-lg hover:bg-violet-500/30 transition cursor-pointer"
+                class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg
+                flex items-center justify-center text-base sm:text-lg hover:bg-violet-500/30 transition cursor-pointer"
                 ${i !== 0 ? 'disabled' : ''}>🚪</button>`;
         }
         doorsDiv.innerHTML = html;
@@ -117,7 +116,7 @@ async function startTower() {
     document.getElementById('tower-level').textContent = '0';
     document.getElementById('tower-mult').textContent = '—';
     document.getElementById('tower-pay').textContent = '0₽';
-    document.getElementById('result-area').innerHTML = '<p class="text-amber-400 animate-pulse">Выбери дверь на 1 этаже!</p>';
+    document.getElementById('result-area').innerHTML = '<p class="text-amber-400 animate-pulse text-sm sm:text-base">Выбери дверь на 1 этаже!</p>';
 
     document.getElementById('setup-phase').classList.add('hidden');
     document.getElementById('cashout-phase').classList.remove('hidden');
@@ -136,16 +135,13 @@ async function chooseDoor(floor, door) {
     const trap = d.trap;
 
     if (d.safe) {
-        // Помечаем выбранную дверь как безопасную
         document.getElementById(`door-${floor}-${door}`).innerHTML = '💎';
         document.getElementById(`door-${floor}-${door}`).className =
-            'flex-1 h-12 bg-emerald-500/20 border border-emerald-500/50 rounded-lg flex items-center justify-center text-lg';
-        // Показываем ловушку
+            'flex-1 h-10 sm:h-12 bg-emerald-500/20 border border-emerald-500/50 rounded-lg flex items-center justify-center text-base sm:text-lg';
         document.getElementById(`door-${floor}-${trap}`).innerHTML = '💀';
         document.getElementById(`door-${floor}-${trap}`).className =
-            'flex-1 h-12 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-center text-lg opacity-50';
+            'flex-1 h-10 sm:h-12 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-center text-base sm:text-lg opacity-50';
 
-        // Отключаем кнопки текущего этажа
         for (let j = 0; j < numDoors; j++) {
             document.getElementById(`door-${floor}-${j}`).disabled = true;
         }
@@ -155,38 +151,35 @@ async function chooseDoor(floor, door) {
         document.getElementById('tower-pay').textContent = Math.floor(d.payout) + '₽';
 
         if (d.completed) {
-            // Прошёл все этажи!
             active = false;
             bal = d.balance;
             updateBalance(bal);
             document.getElementById('result-area').innerHTML =
-                `<div class="win-animation"><p class="text-2xl font-black text-emerald-400">🏆 ВСЯ БАШНЯ! +${Math.floor(d.profit)}₽</p></div>`;
+                `<div class="win-animation"><p class="text-lg sm:text-2xl font-black text-emerald-400">🏆 ВСЯ БАШНЯ! +${Math.floor(d.profit)}₽</p></div>`;
             showAllTraps(d.all_traps);
             document.getElementById('cashout-phase').classList.add('hidden');
             document.getElementById('new-phase').classList.remove('hidden');
         } else {
-            // Активируем следующий этаж
             const nextFloor = d.level;
             if (nextFloor < 10) {
-                document.getElementById('floor-' + nextFloor).className = 'flex items-center gap-2 transition-all opacity-100';
+                document.getElementById('floor-' + nextFloor).className = 'flex items-center gap-1 sm:gap-2 transition-all opacity-100';
                 for (let j = 0; j < numDoors; j++) {
                     document.getElementById(`door-${nextFloor}-${j}`).disabled = false;
                 }
             }
             document.getElementById('result-area').innerHTML =
-                `<p class="text-emerald-400 font-bold">✅ Этаж ${d.level} пройден! x${d.multiplier}</p>`;
+                `<p class="text-emerald-400 font-bold text-sm sm:text-base">✅ Этаж ${d.level} пройден! x${d.multiplier}</p>`;
         }
     } else {
-        // Попал в ловушку
         active = false;
         document.getElementById(`door-${floor}-${door}`).innerHTML = '💀';
         document.getElementById(`door-${floor}-${door}`).className =
-            'flex-1 h-12 bg-red-500/30 border border-red-500 rounded-lg flex items-center justify-center text-lg animate-pulse';
+            'flex-1 h-10 sm:h-12 bg-red-500/30 border border-red-500 rounded-lg flex items-center justify-center text-base sm:text-lg animate-pulse';
 
         bal = d.balance;
         updateBalance(bal);
         document.getElementById('result-area').innerHTML =
-            `<p class="text-xl font-bold text-red-400">💀 Ловушка! -${Math.floor(Math.abs(d.profit))}₽</p>`;
+            `<p class="text-base sm:text-xl font-bold text-red-400">💀 Ловушка! -${Math.floor(Math.abs(d.profit))}₽</p>`;
         showAllTraps(d.all_traps);
 
         document.getElementById('cashout-phase').classList.add('hidden');
@@ -203,7 +196,7 @@ function showAllTraps(traps) {
             const btn = document.getElementById(`door-${i}-${j}`);
             if (btn && j === traps[i] && btn.innerHTML !== '💀') {
                 btn.innerHTML = '💀';
-                btn.className = 'flex-1 h-12 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-center text-lg opacity-40';
+                btn.className = 'flex-1 h-10 sm:h-12 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center justify-center text-base sm:text-lg opacity-40';
             }
             if (btn) btn.disabled = true;
         }
@@ -220,7 +213,7 @@ async function cashoutTower() {
         bal = d.balance;
         updateBalance(bal);
         document.getElementById('result-area').innerHTML =
-            `<div class="win-animation"><p class="text-2xl font-black text-emerald-400">💰 +${Math.floor(d.profit)}₽ (x${d.multiplier})</p></div>`;
+            `<div class="win-animation"><p class="text-lg sm:text-2xl font-black text-emerald-400">💰 +${Math.floor(d.profit)}₽ (x${d.multiplier})</p></div>`;
         showAllTraps(d.all_traps);
         document.getElementById('cashout-phase').classList.add('hidden');
         document.getElementById('new-phase').classList.remove('hidden');
@@ -232,18 +225,18 @@ async function cashoutTower() {
 function resetTower() {
     document.getElementById('new-phase').classList.add('hidden');
     document.getElementById('setup-phase').classList.remove('hidden');
-    document.getElementById('result-area').innerHTML = '<p class="text-gray-500">Поднимайся по этажам!</p>';
+    document.getElementById('result-area').innerHTML = '<p class="text-gray-500 text-sm sm:text-base">Поднимайся по этажам!</p>';
     document.getElementById('tower-level').textContent = '0';
     document.getElementById('tower-mult').textContent = '—';
     document.getElementById('tower-pay').textContent = '0₽';
 
     for (let i = 0; i < 10; i++) {
-        document.getElementById('floor-' + i).className = 'flex items-center gap-2 opacity-30 transition-all';
+        document.getElementById('floor-' + i).className = 'flex items-center gap-1 sm:gap-2 opacity-30 transition-all';
         const doorsDiv = document.getElementById('doors-' + i);
         doorsDiv.innerHTML = `
-            <div class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-lg">🚪</div>
-            <div class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-lg">🚪</div>
-            <div class="flex-1 h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-lg">🚪</div>`;
+            <div class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🚪</div>
+            <div class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🚪</div>
+            <div class="flex-1 h-10 sm:h-12 bg-violet-500/10 border border-violet-500/20 rounded-lg flex items-center justify-center text-base sm:text-lg">🚪</div>`;
         document.getElementById('mult-' + i).textContent = '';
     }
 }

@@ -36,7 +36,8 @@
 
     <h2 class="text-2xl font-bold mb-6 text-center">🎮 Мини-игры</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 max-w-6xl mx-auto">
+    <!-- Адаптивная сетка: 1 колонка на телефонах, 2 на планшетах, 3-4 на десктопе -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-6xl mx-auto">
         {% set games = [
         {'url':'/game/slots','icon':'🎰','name':'Слоты','desc':'Крути барабаны','mult':'до x100','color':'violet'},
         {'url':'/game/dice','icon':'🎲','name':'Кости','desc':'Угадай результат','mult':'до x8','color':'emerald'},
@@ -54,12 +55,12 @@
         {'url':'/game/keno','icon':'🎱','name':'Кено','desc':'Выбери числа','mult':'до x5000','color':'teal'}
         ] %}
         {% for g in games %}
-        <a href="{{ g.url }}" class="card-hover glass neon-border rounded-2xl p-5 block group">
-            <div class="text-4xl mb-3 text-center group-hover:scale-110 transition">{{ g.icon }}</div>
-            <h3 class="text-lg font-bold text-center mb-1">{{ g.name }}</h3>
-            <p class="text-gray-400 text-xs text-center mb-3">{{ g.desc }}</p>
+        <a href="{{ g.url }}" class="card-hover glass neon-border rounded-2xl p-4 sm:p-5 block group">
+            <div class="text-3xl sm:text-4xl mb-2 sm:mb-3 text-center group-hover:scale-110 transition">{{ g.icon }}</div>
+            <h3 class="text-base sm:text-lg font-bold text-center mb-1">{{ g.name }}</h3>
+            <p class="text-gray-400 text-xs text-center mb-2 sm:mb-3">{{ g.desc }}</p>
             <div class="text-center">
-                <span class="text-xs bg-{{ g.color }}-500/20 text-{{ g.color }}-300 px-3 py-1 rounded-full">{{ g.mult }}</span>
+                <span class="text-xs bg-{{ g.color }}-500/20 text-{{ g.color }}-300 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">{{ g.mult }}</span>
             </div>
         </a>
         {% endfor %}

@@ -1,64 +1,72 @@
 {% extends 'base.html' %}
 {% block title %}🏆 Лидеры{% endblock %}
 {% block content %}
-<div class="slide-up max-w-6xl mx-auto">
-    <div class="flex items-center gap-3 mb-8">
-        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition">← Назад</a>
-        <h1 class="text-3xl font-black">🏆 Таблица лидеров</h1>
+<div class="slide-up max-w-6xl mx-auto px-2 sm:px-4">
+    <div class="flex items-center gap-2 sm:gap-3 mb-6 sm:mb-8">
+        <a href="/dashboard" class="text-gray-400 hover:text-violet-400 transition text-sm sm:text-base">← Назад</a>
+        <h1 class="text-2xl sm:text-3xl font-black">🏆 Таблица лидеров</h1>
     </div>
 
-    <div class="glass neon-border rounded-2xl p-6">
-        <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-                <thead>
-                    <tr class="text-gray-400 border-b border-gray-700">
-                        <th class="text-left py-3 px-2">#</th>
-                        <th class="text-left py-3 px-2">Игрок</th>
-                        <th class="text-right py-3 px-2">Баланс</th>
-                        <th class="text-right py-3 px-2">Профит</th>
-                        <th class="text-right py-3 px-2">Winrate</th>
-                        <th class="text-right py-3 px-2">ROI</th>
-                        <th class="text-right py-3 px-2">Игр</th>
-                        <th class="text-right py-3 px-2">Побед</th>
-                        <th class="text-right py-3 px-2">Макс. вин</th>
-                        <th class="text-right py-3 px-2">Пик</th>
-                        <th class="text-right py-3 px-2">Стрик</th>
-                        <th class="text-center py-3 px-2">Статус</th>
-                    </tr>
-                </thead>
-                <tbody id="lb-body">
-                    {% for l in leaders %}
-                    <tr class="border-b border-gray-800/50 hover:bg-violet-500/5 {% if l.username == user.username %}bg-violet-500/10{% endif %}">
-                        <td class="py-3 px-2">{% if loop.index==1 %}🥇{% elif loop.index==2 %}🥈{% elif loop.index==3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
-                        <td class="py-3 px-2 font-bold {% if l.username == user.username %}text-violet-400{% endif %}">
-                            {{ l.username }}{% if l.username == user.username %} <span class="text-xs text-gray-500">(вы)</span>{% endif %}
-                        </td>
-                        <td class="py-3 px-2 text-right text-emerald-400 font-bold">{{ "%.0f"|format(l.balance) }}₽</td>
-                        <td class="py-3 px-2 text-right font-bold {% if l.profit >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">{{ "%+.0f"|format(l.profit) }}₽</td>
-                        <td class="py-3 px-2 text-right text-violet-400">{{ "%.1f"|format(l.winrate) }}%</td>
-                        <td class="py-3 px-2 text-right {% if l.roi >= 0 %}text-emerald-400{% else %}text-red-400{% endif %}">{{ "%+.1f"|format(l.roi) }}%</td>
-                        <td class="py-3 px-2 text-right text-gray-300">{{ l.games_played }}</td>
-                        <td class="py-3 px-2 text-right text-gray-300">{{ l.games_won }}</td>
-                        <td class="py-3 px-2 text-right text-amber-400 font-bold">{{ "%.0f"|format(l.biggest_win) }}₽</td>
-                        <td class="py-3 px-2 text-right text-violet-300">{{ "%.0f"|format(l.peak_balance) }}₽</td>
-                        <td class="py-3 px-2 text-right text-orange-400">{{ l.best_streak }}🔥</td>
-                        <td class="py-3 px-2 text-center">
-                            {% if l.is_online %}
-                            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                            <span class="text-xs text-emerald-400 ml-1">Online</span>
-                            {% else %}
-                            <span class="inline-block w-2 h-2 rounded-full bg-gray-600"></span>
-                            <span class="text-xs text-gray-500 ml-1">Offline</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="glass neon-border rounded-xl sm:rounded-2xl p-3 sm:p-6">
+        <div class="overflow-x-auto -mx-3 sm:mx-0">
+            <div class="inline-block min-w-full align-middle px-3 sm:px-0">
+                <table class="w-full text-xs sm:text-sm">
+                    <thead>
+                        <tr class="text-gray-400 border-b border-gray-700">
+                            <th class="text-left py-2 sm:py-3 px-1 sm:px-2 sticky left-0 bg-[#0f0f19] z-10">#</th>
+                            <th class="text-left py-2 sm:py-3 px-1 sm:px-2 sticky left-8 sm:left-10 bg-[#0f0f19] z-10">Игрок</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2">Баланс</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden sm:table-cell">Профит</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden md:table-cell">Winrate</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden lg:table-cell">ROI</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden md:table-cell">Игр</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden lg:table-cell">Побед</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden xl:table-cell">Макс. вин</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden xl:table-cell">Пик</th>
+                            <th class="text-right py-2 sm:py-3 px-1 sm:px-2 hidden lg:table-cell">Стрик</th>
+                            <th class="text-center py-2 sm:py-3 px-1 sm:px-2">Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lb-body">
+                        {% for l in leaders %}
+                        <tr class="border-b border-gray-800/50 hover:bg-violet-500/5 {% if l.username == user.username %}bg-violet-500/10{% endif %}">
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 sticky left-0 bg-[#0f0f19] z-10">{% if loop.index==1 %}🥇{% elif loop.index==2 %}🥈{% elif loop.index==3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 font-bold {% if l.username == user.username %}text-violet-400{% endif %} sticky left-8 sm:left-10 bg-[#0f0f19] z-10">
+                                {{ l.username[:10] }}{% if l.username|length > 10 %}...{% endif %}{% if l.username == user.username %} <span class="text-xs text-gray-500 hidden sm:inline">(вы)</span>{% endif %}
+                            </td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-emerald-400 font-bold whitespace-nowrap">{{ "%.0f"|format(l.balance) }}<span class="hidden sm:inline">₽</span></td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right font-bold {% if l.profit >= 0 %}text-emerald-400{% else %}text-red-400{% endif %} hidden sm:table-cell whitespace-nowrap">{{ "%+.0f"|format(l.profit) }}₽</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-violet-400 hidden md:table-cell">{{ "%.1f"|format(l.winrate) }}%</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right {% if l.roi >= 0 %}text-emerald-400{% else %}text-red-400{% endif %} hidden lg:table-cell">{{ "%+.1f"|format(l.roi) }}%</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-gray-300 hidden md:table-cell">{{ l.games_played }}</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-gray-300 hidden lg:table-cell">{{ l.games_won }}</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-amber-400 font-bold hidden xl:table-cell whitespace-nowrap">{{ "%.0f"|format(l.biggest_win) }}₽</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-violet-300 hidden xl:table-cell whitespace-nowrap">{{ "%.0f"|format(l.peak_balance) }}₽</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-orange-400 hidden lg:table-cell">{{ l.best_streak }}🔥</td>
+                            <td class="py-2 sm:py-3 px-1 sm:px-2 text-center">
+                                {% if l.is_online %}
+                                <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span class="text-xs text-emerald-400 ml-1 hidden sm:inline">On</span>
+                                {% else %}
+                                <span class="inline-block w-2 h-2 rounded-full bg-gray-600"></span>
+                                <span class="text-xs text-gray-500 ml-1 hidden lg:inline">Off</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
         {% if not leaders %}
-        <p class="text-gray-500 text-center py-10">Пока нет игроков</p>
+        <p class="text-gray-500 text-center py-6 sm:py-10 text-sm sm:text-base">Пока нет игроков</p>
         {% endif %}
+    </div>
+
+    <!-- Легенда для мобильников -->
+    <div class="sm:hidden mt-4 glass rounded-xl p-3 border border-gray-800">
+        <p class="text-xs text-gray-400 mb-2">📱 Подсказка: прокрути таблицу влево →</p>
+        <p class="text-xs text-gray-500"># и Игрок закреплены, остальное скроллится</p>
     </div>
 </div>
 {% endblock %}
@@ -75,21 +83,22 @@ setInterval(async()=>{
         const m=['🥇','🥈','🥉'];
         tb.innerHTML=data.map((l,i)=>{
             const isMe=l.username===me;
+            const username = l.username.length > 10 ? l.username.substring(0,10) + '...' : l.username;
             return `<tr class="border-b border-gray-800/50 hover:bg-violet-500/5 ${isMe?'bg-violet-500/10':''}">
-                <td class="py-3 px-2">${m[i]||(i+1)}</td>
-                <td class="py-3 px-2 font-bold ${isMe?'text-violet-400':''}">${l.username}${isMe?' <span class="text-xs text-gray-500">(вы)</span>':''}</td>
-                <td class="py-3 px-2 text-right text-emerald-400 font-bold">${Math.floor(l.balance)}₽</td>
-                <td class="py-3 px-2 text-right font-bold ${l.profit>=0?'text-emerald-400':'text-red-400'}">${l.profit>=0?'+':''}${Math.floor(l.profit)}₽</td>
-                <td class="py-3 px-2 text-right text-violet-400">${l.winrate.toFixed(1)}%</td>
-                <td class="py-3 px-2 text-right ${l.roi>=0?'text-emerald-400':'text-red-400'}">${l.roi>=0?'+':''}${l.roi.toFixed(1)}%</td>
-                <td class="py-3 px-2 text-right text-gray-300">${l.games_played}</td>
-                <td class="py-3 px-2 text-right text-gray-300">${l.games_won}</td>
-                <td class="py-3 px-2 text-right text-amber-400 font-bold">${Math.floor(l.biggest_win)}₽</td>
-                <td class="py-3 px-2 text-right text-violet-300">${Math.floor(l.peak_balance)}₽</td>
-                <td class="py-3 px-2 text-right text-orange-400">${l.best_streak}🔥</td>
-                <td class="py-3 px-2 text-center">${l.is_online?
-                    '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="text-xs text-emerald-400 ml-1">On</span>':
-                    '<span class="inline-block w-2 h-2 rounded-full bg-gray-600"></span><span class="text-xs text-gray-500 ml-1">Off</span>'}</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 sticky left-0 bg-[#0f0f19] z-10">${m[i]||(i+1)}</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 font-bold ${isMe?'text-violet-400':''} sticky left-8 sm:left-10 bg-[#0f0f19] z-10">${username}${isMe?' <span class="text-xs text-gray-500 hidden sm:inline">(вы)</span>':''}</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-emerald-400 font-bold whitespace-nowrap">${Math.floor(l.balance)}<span class="hidden sm:inline">₽</span></td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right font-bold ${l.profit>=0?'text-emerald-400':'text-red-400'} hidden sm:table-cell whitespace-nowrap">${l.profit>=0?'+':''}${Math.floor(l.profit)}₽</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-violet-400 hidden md:table-cell">${l.winrate.toFixed(1)}%</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right ${l.roi>=0?'text-emerald-400':'text-red-400'} hidden lg:table-cell">${l.roi>=0?'+':''}${l.roi.toFixed(1)}%</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-gray-300 hidden md:table-cell">${l.games_played}</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-gray-300 hidden lg:table-cell">${l.games_won}</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-amber-400 font-bold hidden xl:table-cell whitespace-nowrap">${Math.floor(l.biggest_win)}₽</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-violet-300 hidden xl:table-cell whitespace-nowrap">${Math.floor(l.peak_balance)}₽</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-right text-orange-400 hidden lg:table-cell">${l.best_streak}🔥</td>
+                <td class="py-2 sm:py-3 px-1 sm:px-2 text-center">${l.is_online?
+                    '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span class="text-xs text-emerald-400 ml-1 hidden sm:inline">On</span>':
+                    '<span class="inline-block w-2 h-2 rounded-full bg-gray-600"></span><span class="text-xs text-gray-500 ml-1 hidden lg:inline">Off</span>'}</td>
             </tr>`;
         }).join('');
     }catch(e){}
