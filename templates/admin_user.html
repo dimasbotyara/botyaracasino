@@ -78,6 +78,53 @@
         </div>
     </div>
 
+    <!-- Effects Section -->
+    <div class="glass neon-border rounded-2xl p-6 mb-8 border-red-500/30">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold">😈 Скрытые эффекты</h3>
+            <span class="text-xs text-red-400">юзер их не видит</span>
+        </div>
+
+        <!-- Active effects -->
+        {% if effects %}
+        <div class="space-y-2 mb-4">
+            {% for e in effects %}
+            <div class="flex items-center justify-between bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <div>
+                    <span class="font-bold">
+                        {% if e.effect_type == 'luck' %}🍀 Везение
+                        {% elif e.effect_type == 'unluck' %}💀 Невезение
+                        {% elif e.effect_type == 'mega_luck' %}🔥 Мега-везение
+                        {% elif e.effect_type == 'freeze' %}🥶 Заморозка
+                        {% else %}{{ e.effect_type }}{% endif %}
+                    </span>
+                    <span class="text-xs text-gray-400 ml-2">Осталось: x{{ e.charges }}</span>
+                    <span class="text-xs text-gray-500 ml-2">от {{ e.created_by }}</span>
+                </div>
+                <button onclick="clearEffect('{{ e.effect_type }}')" class="text-red-400 hover:text-red-300 text-sm font-bold">✕</button>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-sm mb-4">Нет активных эффектов</p>
+        {% endif %}
+
+        <!-- Add effect -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select id="effect-type" class="bg-black/40 border border-red-500/30 rounded-lg px-3 py-2 text-white text-sm">
+                <option value="luck">🍀 Везение (выигрыш)</option>
+                <option value="unluck">💀 Невезение (проигрыш)</option>
+                <option value="mega_luck">🔥 Мега-везение (x3)</option>
+                <option value="freeze">🥶 Заморозка</option>
+            </select>
+            <input type="number" id="effect-charges" value="1" min="1" max="100"
+                class="bg-black/40 border border-red-500/30 rounded-lg px-3 py-2 text-white text-sm">
+            <button onclick="addEffect()" class="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold">
+                😈 Наложить
+            </button>
+        </div>
+    </div>
+
     <!-- Game History -->
     <div class="glass neon-border rounded-2xl p-6">
         <h3 class="text-lg font-bold mb-4">📜 История игр (последние 50)</h3>
@@ -146,6 +193,20 @@ async function removeBal() {
     const d = await apiPost('/admin/api/add_balance',{user_id:uid,amount:-amt});
     showToast(d.message,d.success?'success':'error');
     if(d.success) setTimeout(()=>location.reload(),800);
+}
+
+async function addEffect() {
+    const effect = document.getElementById('effect-type').value;
+    const charges = parseInt(document.getElementById('effect-charges').value) || 1;
+    const d = await apiPost('/admin/api/effect/add', {user_id: uid, effect, charges});
+    showToast(d.message, d.success ? 'success' : 'error');
+    if (d.success) setTimeout(() => location.reload(), 600);
+}
+
+async function clearEffect(effect) {
+    const d = await apiPost('/admin/api/effect/clear', {user_id: uid, effect});
+    showToast(d.message, d.success ? 'success' : 'error');
+    if (d.success) setTimeout(() => location.reload(), 600);
 }
 
 async function kick() {

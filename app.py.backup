@@ -502,7 +502,7 @@ def api_game_slots():
         mult = 2.5
     payout = bet*mult; is_win = mult > 0
     details = f"{'|'.join(mid)} →x{mult}"
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Слоты', bet, is_win, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Слоты', bet, is_win, payout, details)
     log_game_result(get_username(), 'Слоты', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'reels':reels,'middle_row':mid,'multiplier':mult,'payout':payout,'profit':profit,'is_win':is_win,'balance':new_bal})
 
@@ -530,7 +530,7 @@ def api_game_dice():
     elif guess=='exact' and total==target: is_win, mult = True, 8.0
     elif guess=='doubles' and d1==d2: is_win, mult = True, 6.0
     payout = bet*mult; details = f"🎲{d1}+{d2}={total} [{guess}] →x{mult}"
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Кости', bet, is_win, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Кости', bet, is_win, payout, details)
     log_game_result(get_username(), 'Кости', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'die1':d1,'die2':d2,'total':total,'guess':guess,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
@@ -560,7 +560,7 @@ def api_game_roulette():
     elif bet_type=='odd' and result_num%2==1: is_win, mult = True, 2.1
     elif bet_type=='number' and result_num==bet_number: is_win, mult = True, 40.0
     payout = bet*mult; details = f"{result_num}({color}) [{bet_type}] →x{mult}"
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Рулетка', bet, is_win, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Рулетка', bet, is_win, payout, details)
     log_game_result(get_username(), 'Рулетка', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'number':result_num,'color':color,'bet_type':bet_type,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
@@ -583,7 +583,7 @@ def api_game_coinflip():
     mult = 2.0 if is_win else 0  # x2 (0% edge!)
     payout = bet*mult
     ru = {'heads':'Орёл','tails':'Решка'}; details = f"{ru[choice]}→{ru[result]} x{mult}"
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Монетка', bet, is_win, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Монетка', bet, is_win, payout, details)
     log_game_result(get_username(), 'Монетка', bet, is_win, profit, payout, new_bal)
     return jsonify({'success':True,'choice':choice,'result':result,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
@@ -623,11 +623,11 @@ def api_bj_deal():
     session['bj_deck']=deck; session['bj_player']=player; session['bj_dealer']=dealer; session['bj_bet']=bet; session['bj_done']=False
     pv, dv = bj_hand_value(player), bj_hand_value(dealer)
     if pv==21 and dv==21:
-        session['bj_done']=True; new_bal, profit, is_win, payout = record_game(session['user_id'], 'Блэкджек', bet, False, bet, 'Push')
+        session['bj_done']=True; new_bal, profit, _ = record_game(session['user_id'], 'Блэкджек', bet, False, bet, 'Push')
         return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':dv,'status':'push','message':'Ничья!','payout':bet,'profit':0,'balance':new_bal,'done':True})
     elif pv==21:
         session['bj_done']=True; payout=bet*3.0  # ЩЕДРЕЕ: BJ = x3 (было x2.5)
-        new_bal, profit, is_win, payout = record_game(session['user_id'], 'Блэкджек', bet, True, payout, 'BJ x3')
+        new_bal, profit, _ = record_game(session['user_id'], 'Блэкджек', bet, True, payout, 'BJ x3')
         log_game_result(get_username(), 'Блэкджек', bet, True, profit, payout, new_bal)
         return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':dv,'status':'blackjack','message':'🎉 БЛЭКДЖЕК!','payout':payout,'profit':profit,'balance':new_bal,'done':True})
     return jsonify({'player':player,'dealer':[dealer[0],{'rank':'?','suit':'?'}],'player_value':pv,'dealer_value':bj_card_value(dealer[0]),'status':'playing','done':False})
@@ -641,7 +641,7 @@ def api_bj_hit():
     session['bj_player']=player; session['bj_deck']=deck
     if pv>21:
         session['bj_done']=True; dealer=session['bj_dealer']
-        new_bal, profit, is_win, payout = record_game(session['user_id'], 'Блэкджек', bet, False, 0, f'Bust {pv}')
+        new_bal, profit, _ = record_game(session['user_id'], 'Блэкджек', bet, False, 0, f'Bust {pv}')
         log_game_result(get_username(), 'Блэкджек', bet, False, profit, 0, new_bal)
         return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':bj_hand_value(dealer),'status':'bust','message':f'💥 Перебор! ({pv})','payout':0,'profit':profit,'balance':new_bal,'done':True})
     if pv==21: return api_bj_stand()
@@ -656,19 +656,11 @@ def api_bj_stand():
     pv = bj_hand_value(player)
     while bj_hand_value(dealer)<17: dealer.append(deck.pop())
     dv = bj_hand_value(dealer)
-    if dv>21:
-        new_bal,profit,is_win,payout=record_game(session['user_id'],'Блэкджек',bet,True,bet*2.2,f'Дилер bust {dv}')
-        status,msg=('win' if is_win else 'loss'),('🎉 Дилер перебрал!' if is_win else f'😢 {pv} vs {dv}')
-    elif pv>dv:
-        new_bal,profit,is_win,payout=record_game(session['user_id'],'Блэкджек',bet,True,bet*2.2,f'{pv}vs{dv}')
-        status,msg=('win' if is_win else 'loss'),(f'🎉 {pv} vs {dv}' if is_win else f'😢 {pv} vs {dv}')
-    elif pv==dv:
-        new_bal,profit,is_win,payout=record_game(session['user_id'],'Блэкджек',bet,False,bet,f'Push {pv}')
-        status,msg=('win' if is_win else 'push'),f'Ничья {pv}'
-    else:
-        new_bal,profit,is_win,payout=record_game(session['user_id'],'Блэкджек',bet,False,0,f'{pv}vs{dv}')
-        status,msg=('win' if is_win else 'loss'),(f'🎉 {pv} vs {dv}' if is_win else f'😢 {pv} vs {dv}')
-    log_game_result(get_username(),'Блэкджек',bet,is_win,profit,payout,new_bal)
+    if dv>21: payout=bet*2.2; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,True,payout,f'Дилер bust {dv}'); status,msg='win',f'🎉 Дилер перебрал!'
+    elif pv>dv: payout=bet*2.2; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,True,payout,f'{pv}vs{dv}'); status,msg='win',f'🎉 {pv} vs {dv}'
+    elif pv==dv: payout=bet; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,False,bet,f'Push {pv}'); status,msg='push',f'Ничья {pv}'
+    else: payout=0; new_bal,profit,_=record_game(session['user_id'],'Блэкджек',bet,False,0,f'{pv}vs{dv}'); status,msg='loss',f'😢 {pv} vs {dv}'
+    log_game_result(get_username(),'Блэкджек',bet,status=='win',profit,payout,new_bal)
     return jsonify({'player':player,'dealer':dealer,'player_value':pv,'dealer_value':dv,'status':status,'message':msg,'payout':payout,'profit':profit,'balance':new_bal,'done':True})
 
 # 7. MINES — фикс + честная формула + минимальный edge
@@ -722,7 +714,7 @@ def api_mines_open():
 
     if cell in mines:
         session['mines_active'] = False
-        new_bal, profit, is_win, payout = record_game(
+        new_bal, profit, _ = record_game(
             session['user_id'], 'Мины', bet, False, 0,
             f'Boom {len(opened)} cells'
         )
@@ -757,7 +749,7 @@ def api_mines_cashout():
     mult = mines_multiplier(safe, len(opened))
     payout = round(bet * mult, 2)
     session['mines_active'] = False
-    new_bal, profit, is_win, payout = record_game(
+    new_bal, profit, _ = record_game(
         session['user_id'], 'Мины', bet, True, payout, f'x{mult}'
     )
     log_game_result(get_username(), 'Мины', bet, True, profit, payout, new_bal)
@@ -803,7 +795,7 @@ def api_hilo_guess():
         session['hilo_card']=nc
         return jsonify({'success':True,'correct':True,'new_card':nc,'streak':session['hilo_streak'],'multiplier':session['hilo_mult'],'current_payout':round(bet*session['hilo_mult'],2)})
     session['hilo_active']=False
-    new_bal,profit,is_win,payout=record_game(session['user_id'],'Хай-Лоу',bet,False,0,f'Streak {session["hilo_streak"]}')
+    new_bal,profit,_=record_game(session['user_id'],'Хай-Лоу',bet,False,0,f'Streak {session["hilo_streak"]}')
     log_game_result(get_username(),'Хай-Лоу',bet,False,profit,0,new_bal)
     return jsonify({'success':True,'correct':False,'new_card':nc,'balance':new_bal,'profit':profit})
 
@@ -812,7 +804,7 @@ def api_hilo_guess():
 def api_hilo_cashout():
     if not session.get('hilo_active') or session['hilo_streak']==0: return jsonify({'success':False,'message':'Нечего забирать'})
     bet=session['hilo_bet']; mult=session['hilo_mult']; payout=round(bet*mult,2); session['hilo_active']=False
-    new_bal,profit,is_win,payout=record_game(session['user_id'],'Хай-Лоу',bet,True,payout,f'x{mult} streak {session["hilo_streak"]}')
+    new_bal,profit,_=record_game(session['user_id'],'Хай-Лоу',bet,True,payout,f'x{mult} streak {session["hilo_streak"]}')
     log_game_result(get_username(),'Хай-Лоу',bet,True,profit,payout,new_bal)
     return jsonify({'success':True,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
@@ -847,7 +839,7 @@ def api_game_races():
         positions.append(sp)
     is_win=chosen==winner; mult=odds[chosen-1] if is_win else 0; payout=bet*mult
     details=f"{horses[chosen-1]}→{horses[winner-1]}"
-    new_bal,profit,is_win,payout=record_game(session['user_id'],'Скачки',bet,is_win,payout,details)
+    new_bal,profit,_=record_game(session['user_id'],'Скачки',bet,is_win,payout,details)
     log_game_result(get_username(),'Скачки',bet,is_win,profit,payout,new_bal)
     return jsonify({'success':True,'winner':winner,'chosen':chosen,'horses':[f'🏇 {h}' for h in horses],'odds':odds,'positions':positions,'is_win':is_win,'multiplier':mult,'payout':payout,'profit':profit,'balance':new_bal})
 
@@ -883,7 +875,7 @@ def api_game_wheel():
     payout = bet * mult
     is_win = mult > 1  # x0.5 не считаем выигрышем
 
-    new_bal, profit, is_win, payout = record_game(
+    new_bal, profit, _ = record_game(
         session['user_id'], 'Колесо', bet, is_win,
         payout, f'Колесо: {result["label"]}'
     )
@@ -990,7 +982,7 @@ def api_tower_choose():
 
         if level + 1 >= 10:
             session['tower_active'] = False
-            new_bal, profit, is_win, payout = record_game(
+            new_bal, profit, _ = record_game(
                 session['user_id'], 'Башня', bet, True, current_payout,
                 f'🗼 Все 10 этажей! x{current_mult}'
             )
@@ -1010,7 +1002,7 @@ def api_tower_choose():
         })
     else:
         session['tower_active'] = False
-        new_bal, profit, is_win, payout = record_game(
+        new_bal, profit, _ = record_game(
             session['user_id'], 'Башня', bet, False, 0,
             f'💀 Этаж {level + 1}, дверь {door + 1}'
         )
@@ -1037,7 +1029,7 @@ def api_tower_cashout():
     payout = round(bet * mult, 2)
 
     session['tower_active'] = False
-    new_bal, profit, is_win, payout = record_game(
+    new_bal, profit, _ = record_game(
         session['user_id'], 'Башня', bet, True, payout,
         f'🗼 Кэшаут этаж {level} x{mult}'
     )
@@ -1082,7 +1074,7 @@ def api_game_limbo():
     payout = round(bet * target, 2) if is_win else 0
 
     details = f'Цель: {target}x | Результат: {result}x'
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Лимбо', bet, is_win, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Лимбо', bet, is_win, payout, details)
     log_game_result(get_username(), 'Лимбо', bet, is_win, profit, payout, new_bal)
 
     if is_win and profit >= 10000:
@@ -1144,7 +1136,7 @@ def api_game_penalty():
     positions = ['↖️','⬆️','↗️','⬅️','⏺️','➡️','↙️','⬇️','↘️']
     details = f'⚽ {positions[kick_pos]} vs 🧤 {positions[keeper_main]} → {"ГОЛ" if is_goal else "МИМО"}'
 
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Пенальти', bet, is_goal, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Пенальти', bet, is_goal, payout, details)
     log_game_result(get_username(), 'Пенальти', bet, is_goal, profit, payout, new_bal)
 
     return jsonify({
@@ -1205,7 +1197,7 @@ def api_game_keno():
     is_win = mult > 1  # >x1 считаем реальным выигрышем
 
     details = f'Выбрано {num_chosen}, попаданий {num_hits}, x{mult}'
-    new_bal, profit, is_win, payout = record_game(session['user_id'], 'Кено', bet, is_win, payout, details)
+    new_bal, profit, _ = record_game(session['user_id'], 'Кено', bet, is_win, payout, details)
     log_game_result(get_username(), 'Кено', bet, is_win, profit, payout, new_bal)
 
     if is_win and profit >= 10000:
@@ -1290,7 +1282,7 @@ def api_game_crash_cashout():
     if multiplier > crash_point:
         # Игрок пытался забрать после краша — это loss
         session['crash_active'] = False
-        new_bal, profit, is_win, payout = record_game(
+        new_bal, profit, _ = record_game(
             session['user_id'], 'Краш', bet, False, 0,
             f'Краш {crash_point}x (пытался забрать {multiplier}x)'
         )
@@ -1305,7 +1297,7 @@ def api_game_crash_cashout():
     payout = round(bet * multiplier, 2)
     session['crash_active'] = False
     
-    new_bal, profit, is_win, payout = record_game(
+    new_bal, profit, _ = record_game(
         session['user_id'], 'Краш', bet, True, payout,
         f'Кэшаут {multiplier}x (краш {crash_point}x)'
     )

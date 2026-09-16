@@ -513,7 +513,7 @@ def record_game(user_id, game_type, bet_amount, is_win, payout, details=""):
     new_bal, profit, real_is_win = _record_game_raw(
         user_id, game_type, bet_amount, is_win, payout, details
     )
-    return new_bal, profit, real_is_win, payout
+    return new_bal, profit, real_is_win, payout   # ⬅️ добавили 4-е значение
 
 
 def _record_game_raw(user_id, game_type, bet_amount, is_win, payout, details=""):

@@ -68,83 +68,94 @@ let currentRotation = 0;
 const canvas = document.getElementById('wheel-canvas');
 const ctx = canvas.getContext('2d');
 
-// Адаптивный размер canvas
+// Рисуем на CSS-размер, а Retina делаем через dpr
 function resizeCanvas() {
-    const size = Math.min(canvas.offsetWidth, 300) * 2; // Retina
-    canvas.width = size;
-    canvas.height = size;
-    ctx.scale(2, 2);
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = Math.max(rect.width, 1);
+    const cssH = Math.max(rect.height, 1);
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    // НЕ накапливаем scale — сбрасываем через setTransform
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     drawWheel();
 }
 
+// Вызываем ПОСЛЕ того, как браузер разложил страницу
+window.addEventListener('load', resizeCanvas);
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
 
-const W = canvas.width / 2;
-const H = canvas.height / 2;
-
-function drawWheel(angle = 0, segs = null) {
-    const useSegs = segs || segments;
-    if (!useSegs.length) {
-        const defaultSegs = [
-            {label:'x0.5', color:'#4a1942'},
-            {label:'x1', color:'#6b21a8'},
-            {label:'x1.5', color:'#7c3aed'},
-            {label:'x2', color:'#2563eb'},
-            {label:'x3', color:'#059669'},
-            {label:'x5', color:'#d97706'},
-            {label:'x10', color:'#dc2626'},
-            {label:'x25', color:'#f59e0b'},
-            {label:'x50', color:'#10b981'}
-        ];
-        drawSegments(angle, defaultSegs);
-        return;
-    }
-    drawSegments(angle, useSegs);
+// и дополнительно — на случай, если load уже прошёл
+if (document.readyState === 'complete') {
+    setTimeout(resizeCanvas, 50);
+} else {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(resizeCanvas, 50));
 }
 
-function drawSegments(angle, segs) {
-    const cx = W/2, cy = H/2, r = Math.min(W, H)/2 - 5;
-    const n = segs.length;
-    const arc = 2 * Math.PI / n;
+function drawWheel(angle = 0, segs = null) {
+    const useSegs = segs || segments || [];
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width;
+    const H = rect.height;
+    if (W <= 0 || H <= 0) return;
+
+    const cx = W / 2;
+    const cy = H / 2;
+    const r = Math.min(W, H) / 2 - 5;
+
+    const defaultSegs = [
+        {label:'x0.5', color:'#4a1942'},
+        {label:'x1',   color:'#6b21a8'},
+        {label:'x1.5', color:'#7c3aed'},
+        {label:'x2',   color:'#2563eb'},
+        {label:'x3',   color:'#059669'},
+        {label:'x5',   color:'#d97706'},
+        {label:'x10',  color:'#dc2626'},
+        {label:'x25',  color:'#f59e0b'},
+        {label:'x50',  color:'#10b981'},
+    ];
+    const finalSegs = useSegs.length ? useSegs : defaultSegs;
+
     ctx.clearRect(0, 0, W, H);
 
-    const startAngle = -Math.PI/2 - arc/2 + angle;
+    const n = finalSegs.length;
+    const arc = 2 * Math.PI / n;
+    const startAngle = -Math.PI / 2 - arc / 2 + angle;
 
     for (let i = 0; i < n; i++) {
         const a = startAngle + i * arc;
+
+        // sector
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, r, a, a + arc);
         ctx.closePath();
-        ctx.fillStyle = segs[i].color;
+        ctx.fillStyle = finalSegs[i].color;
         ctx.fill();
         ctx.strokeStyle = 'rgba(255,255,255,0.15)';
         ctx.lineWidth = 1;
         ctx.stroke();
 
-        // Text
+        // label
         ctx.save();
         ctx.translate(cx, cy);
-        ctx.rotate(a + arc/2);
+        ctx.rotate(a + arc / 2);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 10px Inter';
+        ctx.font = 'bold ' + Math.max(10, W * 0.045) + 'px Inter';
         ctx.textAlign = 'center';
-        ctx.fillText(segs[i].label, r * 0.68, 3);
+        ctx.fillText(finalSegs[i].label, r * 0.68, 3);
         ctx.restore();
     }
 
-    // Center
+    // center circle
     ctx.beginPath();
-    ctx.arc(cx, cy, 15, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, Math.max(12, W * 0.05), 0, 2 * Math.PI);
     ctx.fillStyle = '#0a0a0f';
     ctx.fill();
     ctx.strokeStyle = '#7c3aed';
     ctx.lineWidth = 2;
     ctx.stroke();
 }
-
-drawWheel();
 
 async function spinWheel() {
     if (spinning) return;
@@ -153,7 +164,9 @@ async function spinWheel() {
     if (bet > bal) return showToast('Недостаточно средств', 'error');
 
     spinning = true;
-    document.getElementById('wheel-btn').textContent = '⏳ Крутим...';
+    const btn = document.getElementById('wheel-btn');
+    btn.textContent = '⏳ Крутим...';
+    btn.disabled = true;
 
     const r = await fetch('/api/game/wheel', {
         method: 'POST',
@@ -165,7 +178,8 @@ async function spinWheel() {
     if (!d.success) {
         showToast(d.message || 'Ошибка', 'error');
         spinning = false;
-        document.getElementById('wheel-btn').textContent = '🎯 КРУТИТЬ';
+        btn.textContent = '🎯 КРУТИТЬ';
+        btn.disabled = false;
         return;
     }
 
@@ -174,9 +188,14 @@ async function spinWheel() {
     const arc = 2 * Math.PI / n;
     const idx = d.segment_index;
 
-    const targetRotation = currentRotation
-        + 6 * 2 * Math.PI
-        + ((-idx * arc) - (currentRotation % (2 * Math.PI)));
+    // Крутим на 6 полных оборотов + ставим нужный сегмент под стрелку (сверху)
+    // Стрелка сверху = угол -PI/2. Сегмент idx должен попасть под неё.
+    const twoPi = 2 * Math.PI;
+    const targetMod = (twoPi - (idx * arc) % twoPi) % twoPi;
+    const currentMod = ((currentRotation % twoPi) + twoPi) % twoPi;
+    let delta = targetMod - currentMod;
+    if (delta < 0) delta += twoPi;
+    const targetRotation = currentRotation + 6 * twoPi + delta;
 
     const startRot = currentRotation;
     const totalDelta = targetRotation - startRot;
@@ -186,7 +205,7 @@ async function spinWheel() {
     function animate() {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 4);
+        const eased = 1 - Math.pow(1 - progress, 4); // easeOutQuart
         currentRotation = startRot + totalDelta * eased;
         drawWheel(currentRotation);
 
@@ -206,7 +225,8 @@ async function spinWheel() {
             }
 
             spinning = false;
-            document.getElementById('wheel-btn').textContent = '🎯 КРУТИТЬ';
+            btn.textContent = '🎯 КРУТИТЬ';
+            btn.disabled = false;
         }
     }
     animate();

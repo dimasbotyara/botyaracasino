@@ -63,16 +63,17 @@ def admin_dashboard(admin_level):
 @admin_bp.route('/user/<int:user_id>')
 @admin_required('admin')
 def admin_user_detail(user_id, admin_level):
-    from models import get_user_by_id, get_user_history
+    from models import get_user_by_id, get_user_history, get_effects
     target = get_user_by_id(user_id)
     if not target:
         flash('Пользователь не найден', 'error')
         return redirect(url_for('admin.admin_dashboard'))
     history = get_user_history(user_id, 50)
+    effects = get_effects(user_id)
     level_info = get_level_info(admin_level)
     user = get_user_by_id(session['user_id'])
     return render_template('admin_user.html',
-        user=user, target=target, history=history,
+        user=user, target=target, history=history, effects=effects,
         admin_level=admin_level, level_info=level_info, dev=DEVELOPER)
 
 
@@ -289,3 +290,44 @@ def api_stats(admin_level):
 def api_users(admin_level):
     from models import get_all_users
     return jsonify(get_all_users())
+
+
+@admin_bp.route('/api/effect/add', methods=['POST'])
+@admin_required('admin')
+def api_effect_add(admin_level):
+    from models import get_user_by_id, add_effect, log_admin_action, EFFECT_TYPES
+    data = request.get_json()
+    user_id = int(data.get('user_id', 0))
+    effect = data.get('effect', '')
+    charges = max(1, min(100, int(data.get('charges', 1))))
+
+    target = get_user_by_id(user_id)
+    if not target:
+        return jsonify({'success': False, 'message': 'Не найден'})
+    if effect not in EFFECT_TYPES:
+        return jsonify({'success': False, 'message': 'Неизвестный эффект'})
+
+    add_effect(user_id, effect, charges, session.get('username', ''))
+    log_admin_action(session.get('username', ''), f'effect_add_{effect}',
+                     target['username'], f'x{charges}', request.remote_addr)
+
+    return jsonify({'success': True,
+                    'message': f'{EFFECT_TYPES[effect]["icon"]} x{charges} → {target["username"]}'})
+
+
+@admin_bp.route('/api/effect/clear', methods=['POST'])
+@admin_required('admin')
+def api_effect_clear(admin_level):
+    from models import get_user_by_id, clear_effects, log_admin_action
+    data = request.get_json()
+    user_id = int(data.get('user_id', 0))
+    effect = data.get('effect')
+
+    target = get_user_by_id(user_id)
+    if not target:
+        return jsonify({'success': False, 'message': 'Не найден'})
+
+    clear_effects(user_id, effect)
+    log_admin_action(session.get('username', ''), 'effect_clear',
+                     target['username'], effect or 'all', request.remote_addr)
+    return jsonify({'success': True, 'message': f'Эффекты {target["username"]} сняты'})

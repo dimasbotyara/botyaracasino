@@ -394,15 +394,24 @@
     <div id="deposit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm">
         <div class="glass neon-border rounded-2xl p-8 w-full max-w-md slide-up">
             <h3 class="text-xl font-bold mb-2 neon-text">💰 Пополнение</h3>
-            <p class="text-gray-400 text-sm mb-6">Лимит: 150 000₽ за раз</p>
+            <p class="text-gray-400 text-sm mb-6">
+                Лимит: {{ "{:,.0f}".format(deposit_limit).replace(',', ' ') }}₽ за раз
+            </p>
             <div class="space-y-4">
-                <input type="number" id="deposit-amount" min="1" max="150000" placeholder="Сумма"
-                       class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500">
+                <input type="number" id="deposit-amount" min="1" max="{{ deposit_limit }}" placeholder="Сумма"
+                    class="w-full bg-black/40 border border-violet-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-violet-500">
+                <!-- Быстрые суммы -->
                 <div class="grid grid-cols-4 gap-2">
-                    <button onclick="setDep(1000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">1K</button>
-                    <button onclick="setDep(5000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">5K</button>
-                    <button onclick="setDep(25000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">25K</button>
-                    <button onclick="setDep(150000)" class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20">MAX</button>
+                    <button onclick="setDep(1000)"   class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20 transition">1K</button>
+                    <button onclick="setDep(5000)"   class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20 transition">5K</button>
+                    <button onclick="setDep(25000)"  class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20 transition">25K</button>
+                    <button onclick="setDep(50000)"  class="bg-violet-500/10 border border-violet-500/20 rounded-lg py-2 text-sm hover:bg-violet-500/20 transition">50K</button>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setDep(100000)"  class="bg-amber-500/10 border border-amber-500/20 rounded-lg py-2 text-sm text-amber-300 hover:bg-amber-500/20 transition">100K</button>
+                    <button onclick="setDep(250000)"  class="bg-amber-500/10 border border-amber-500/20 rounded-lg py-2 text-sm text-amber-300 hover:bg-amber-500/20 transition">250K</button>
+                    <button onclick="setDep(500000)"  class="bg-amber-500/10 border border-amber-500/20 rounded-lg py-2 text-sm text-amber-300 hover:bg-amber-500/20 transition">500K</button>
+                    <button onclick="setDep({{ deposit_limit }})" class="bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-lg py-2 text-sm hover:from-amber-400 hover:to-orange-400 transition shadow-lg shadow-amber-500/20">MAX</button>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="submitDeposit()" class="btn-green flex-1 text-white py-3 rounded-xl font-bold">Пополнить</button>
@@ -461,9 +470,14 @@
         document.getElementById('deposit-amount').value = v;
     }
 
+    const DEPOSIT_LIMIT = {{ deposit_limit }};
+
     async function submitDeposit(){
         const amount = parseFloat(document.getElementById('deposit-amount').value);
         if(!amount || amount <= 0) return alert('Введите сумму');
+        if(amount > DEPOSIT_LIMIT) {
+            return showToast('Максимум ' + DEPOSIT_LIMIT.toLocaleString('ru-RU') + '₽ за раз', 'error');
+        }
 
         const r = await fetch('/api/deposit', {
             method: 'POST',
@@ -510,8 +524,13 @@
     setInterval(async () => {
         try {
             const r = await fetch('/api/balance');
+            if (r.status === 401) {
+                // Сессия истекла — перезагрузим страницу, login_required сам кинет на /login
+                window.location.reload();
+                return;
+            }
             const d = await r.json();
-            updateBalance(d.balance);
+            if (d.balance !== undefined) updateBalance(d.balance);
         } catch(e) {}
     }, 5000);
 
