@@ -3,6 +3,11 @@
 > **A modern, neon-styled fake casino web app built with Flask** 🚀
 > Full-featured casino simulator with 14 mini-games, admin panel, real-time chat, and achievements system!
 
+[![Python CI](https://img.shields.io/github/actions/workflow/status/dimasbotyara/botyaracasino/python-app.yml?branch=main&style=for-the-badge&logo=github-actions&logoColor=white&label=Python%20CI)](https://github.com/dimasbotyara/botyaracasino/actions)
+[![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
 ---
 
 ## ✨ Features
